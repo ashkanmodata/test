@@ -378,7 +378,7 @@ window.__cpcDemoModules.push(function (api) {
     function bar() {
       var self = d.querySelector('.cpc-appbar__nav [data-k="app"]'), portal = d.querySelector('.cpc-appbar__nav [data-k="portal"]');
       if (!self) return;
-      self.textContent = d.documentElement.getAttribute("lang") === "ar" ? "منصة تقييم الموظفين ٢" : "Employee Assessment Platform v2";
+      self.textContent = d.documentElement.getAttribute("lang") === "ar" ? "منصة تقييم الموظفين" : "Employee Assessment Platform";
       self.setAttribute("data-label", self.textContent);
       self.setAttribute("href", B + "/"); self.hidden = false; self.setAttribute("aria-current", "page");
       if (portal) { portal.removeAttribute("aria-current"); portal.setAttribute("href", "/"); }

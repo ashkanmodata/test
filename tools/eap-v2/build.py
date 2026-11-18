@@ -41,7 +41,7 @@ def patch_bundle(js):
         'Mt=typeof window<"u"&&window.parent&&window.parent.__eapStore||typeof window<"u"&&window.__eapStore,Br="/employee_assessment_platform"',
         'Mt=typeof window<"u"&&window.parent&&window.parent.__eapStore2||typeof window<"u"&&window.__eapStore2,Br="/employee_assessment_platform_v2"',
         "store and base path")
-    js = replace_once(js, 'Xx="Employee Assessment Platform"', 'Xx="Employee Assessment Platform v2"', "document title")
+    js = replace_once(js, 'Xx="Employee Assessment Platform"', 'Xx="Employee Assessment Platform"', "document title")
 
     # 2. main navigation: Ranking and Reports removed (Dashboard, Senior managers, Inbox stay)
     js = replace_once(js,
@@ -161,13 +161,13 @@ def patch_data(data):
     card.update({
         "id": "employee-assessment-platform-v2",
         "order": 6,
-        "name": {"en": "Employee Assessment Platform v2", "ar": "منصة تقييم الموظفين ٢"},
+        "name": {"en": "Employee Assessment Platform", "ar": "منصة تقييم الموظفين"},
         "description": {
-            "en": "The revised Employee Assessment Platform from the November client review: one Overview per senior manager "
-                  "(CV summary, job description, KPIs, projects and tasks, recent committees and delegations, ranking and self-ranking), "
-                  "four tabs (Overview, Notes, Report, Development Plan) and the two-page Visual Scorecard report as PDF.",
-            "ar": "منصة تقييم الموظفين بعد مراجعة العميل في نوفمبر: نظرة عامة واحدة لكل مدير (ملخص السيرة، الوصف الوظيفي، مؤشرات الأداء، "
-                  "المشاريع والمهام، اللجان والتفويضات الأخيرة، الترتيب والترتيب الذاتي)، وأربعة تبويبات، وتقرير بطاقة الأداء المرئية بصيغة PDF.",
+            "en": "Assessment of the senior managers for His Excellency: an executive dashboard, one Overview per manager (CV summary, "
+                  "job description, KPIs, projects and tasks, committees and delegations, ranking), notes by project or task, "
+                  "and the Assessment Report and Detailed Assessment Report in English and Arabic.",
+            "ar": "تقييم كبار المديرين لسعادته: لوحة تنفيذية، ونظرة عامة لكل مدير (ملخص السيرة، الوصف الوظيفي، مؤشرات الأداء، المشاريع والمهام، "
+                  "اللجان والتفويضات، الترتيب)، وملاحظات حسب المشروع أو المهمة، وتقرير التقييم وتقرير التقييم التفصيلي بالعربية والإنجليزية.",
         },
         "launch": dict(src["launch"], url=NEW_BASE),
     })
