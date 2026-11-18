@@ -73,30 +73,33 @@ function V2NoteForm({ employeeId: employeeId, presetId: presetId, onDone: onDone
   var _b = (0, v.useState)(presetId || (items[0] && items[0].id) || ""), itemId = _b[0], setItem = _b[1];
   var _c = (0, v.useState)(""), text = _c[0], setText = _c[1];
   var _d = (0, v.useState)(""), msg = _d[0], setMsg = _d[1];
+  var item = items.find(function (r) { return String(r.id) === String(itemId); });
   function submit(ev) {
     ev.preventDefault();
     if (!text.trim()) { setMsg("Write the note first."); return; }
-    if (scope === "item" && !itemId) { setMsg("Choose the project or task."); return; }
-    try { var cat = V2saveNote(employeeId, text, scope === "item" ? Number(itemId) : null); setText(""); setMsg("Saved as “" + V2CAT[cat] + "”."); V2refresh(); if (onDone) onDone(cat); }
+    try { var cat = V2saveNote(employeeId, text, null); setText(""); setMsg("Saved as \u201C" + V2CAT[cat] + "\u201D."); V2refresh(); if (onDone) onDone(cat); }
     catch (e) { setMsg("Could not save: " + e.message); }
   }
-  return y("form", { className: "v2-editor v2-noteform", onSubmit: submit, "data-v2-noteform": employeeId, children: [
+  return y("div", { className: "v2-editor v2-noteform", "data-v2-noteform": employeeId, children: [
     d("p", { className: "v2-label", style: { marginTop: 0 }, children: "This note is" }),
     y("div", { className: "v2-seg", role: "radiogroup", "aria-label": "Note type", children: [
       d("button", { type: "button", role: "radio", "aria-checked": scope === "general", className: scope === "general" ? "on" : "", onClick: function () { setScope("general"); setMsg(""); }, children: "General" }),
-      d("button", { type: "button", role: "radio", "aria-checked": scope === "item", className: scope === "item" ? "on" : "", disabled: !items.length, onClick: function () { setScope("item"); setMsg(""); }, children: "Project / task specific" }),
+      d("button", { type: "button", role: "radio", "aria-checked": scope === "item", className: scope === "item" ? "on" : "", disabled: !items.length, "data-v2-scope": "item", onClick: function () { setScope("item"); setMsg(""); }, children: "Project / task specific" }),
     ] }),
-    scope === "item" && y(Fe, { children: [
+    scope === "item" ? y(Fe, { children: [
       d("label", { htmlFor: "v2-note-item-" + employeeId, children: "Project or task" }),
       d("select", { id: "v2-note-item-" + employeeId, name: "responsibility", value: itemId, onChange: function (e) { setItem(e.target.value); }, children:
         items.map(function (r) { return d("option", { value: r.id, children: (r.kind === "project" ? "Project \xB7 " : "Task \xB7 ") + r.title }, r.id); }) }),
-    ] }),
-    d("label", { htmlFor: "v2-note-text-" + employeeId, children: "Note" }),
-    d("textarea", { id: "v2-note-text-" + employeeId, name: "note", value: text, placeholder: "What did you observe? Write it in your own words; the platform files it as a strength, a development point or a training idea.", onChange: function (e) { setText(e.target.value); setMsg(""); } }),
-    y("div", { className: "v2-actions", children: [
-      d(ne, { type: "submit", size: "touch", children: "Save note" }),
-      onCancel && d("button", { type: "button", className: "v2-iconbtn", onClick: onCancel, children: "Cancel" }),
-      msg && d("span", { role: "status", className: "v2-muted", children: msg }),
+      item && d("div", { style: { marginTop: 14 }, children: d(V2ItemNoteForm, { employeeId: employeeId, item: item, onDone: function (n) { setMsg(n + (n === 1 ? " note entry" : " note entries") + " saved for " + item.title + "."); if (onDone) onDone(n); }, onCancel: onCancel }, item.id) }),
+      msg && d("p", { role: "status", className: "v2-status", children: msg }),
+    ] }) : y("form", { onSubmit: submit, children: [
+      d("label", { htmlFor: "v2-note-text-" + employeeId, children: "Note" }),
+      d("textarea", { id: "v2-note-text-" + employeeId, name: "note", value: text, placeholder: "What did you observe? Write it in your own words; the platform files it as a strength, a development point or a training idea.", onChange: function (e) { setText(e.target.value); setMsg(""); } }),
+      y("div", { className: "v2-actions", children: [
+        d(ne, { type: "submit", size: "touch", children: "Save note" }),
+        onCancel && d("button", { type: "button", className: "v2-iconbtn", onClick: onCancel, children: "Cancel" }),
+        msg && d("span", { role: "status", className: "v2-muted", children: msg }),
+      ] }),
     ] }),
   ] });
 }
@@ -118,7 +121,7 @@ function V2ItemNoteForm({ employeeId: employeeId, item: item, onDone: onDone, on
     try { rows.forEach(function (r) { V2saveNote(employeeId, r[1], item.id, r[0]); }); V2refresh(); if (onDone) onDone(rows.length); }
     catch (e) { setMsg("Could not save: " + e.message); }
   }
-  return y("form", { className: "v2-editor v2-catform", onSubmit: submit, "data-v2-itemnote": item.id, children: [
+  return y("form", { className: "v2-catform", onSubmit: submit, "data-v2-itemnote": item.id, children: [
     y("p", { className: "v2-catform__for", children: ["Note for this " + (item.kind === "project" ? "project" : "task") + ": ", d("b", { children: item.title })] }),
     V2CATS.map(function (c) {
       return y("div", { className: "v2-cat v2-cat--" + c, children: [
@@ -262,7 +265,8 @@ function V2Item({ item: r, employeeId: employeeId, today: today }) {
   var close = (0, v.useCallback)(function () { setOpen(!1); try { if (ds.hash === "#responsibility-" + r.id) ds.hash = ""; } catch (e) { /* router state */ } }, [r.id]);
   var late = r.effective_deadline < today;
   return y(Fe, { children: [
-    y("button", { type: "button", className: "v2-item", id: "responsibility-" + r.id, "data-v2-item": r.id, onClick: function () { setOpen(!0); }, children: [
+    y("button", { type: "button", className: "v2-item" + (late ? " v2-item--late" : r.pending_extensions ? " v2-item--ext" : ""), id: "responsibility-" + r.id, "data-v2-item": r.id, onClick: function () { setOpen(!0); }, children: [
+      d("span", { className: "v2-item__due" + (late ? " late" : ""), children: late ? "Overdue" : V2dueIn(today, r.effective_deadline) }),
       y("span", { className: "v2-item__main", children: [d("span", { className: "v2-item__title", children: r.title }),
         y("span", { className: "v2-when" + (late ? " v2-late" : ""), children: [late ? "Overdue \xB7 was due " : "Due ", ge(r.effective_deadline), r.effective_deadline !== r.deadline ? " \xB7 extended" : "", r.pending_extensions ? " \xB7 extension requested" : ""] })] }),
       d(la, { className: "size-4 v2-item__arrow", "aria-hidden": !0 }),
@@ -281,41 +285,48 @@ function V2loadReport(reportId, mine) {
     var emp = E.select().from(P).where(N(P.userId, V2actor())).get(); return emp ? Bh(E, emp.id, reportId) || null : null;
   } catch (e) { console.error("v2 report", e); return null; }
 }
-function V2reportFile(rep, kind) { var m = rep.snapshot.meta; return V2fileName(qu(rep.snapshot.identity.displayName, m.periodStart, m.periodEnd), kind); }
-async function V2downloadReport(rep, kind) {
-  var bytes = await V2Pdf(rep, kind), url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" })), a = document.createElement("a");
-  a.href = url; a.download = V2reportFile(rep, kind); document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 6e4);
+function V2reportFile(rep, kind, lang) { var m = rep.snapshot.meta; return V2fileName(qu(rep.snapshot.identity.displayName, m.periodStart, m.periodEnd), kind, lang); }
+async function V2downloadReport(rep, kind, lang) {
+  var bytes = await V2Pdf(rep, kind, lang), url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" })), a = document.createElement("a");
+  a.href = url; a.download = V2reportFile(rep, kind, lang); document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 6e4);
 }
 var V2KINDS = [["form", "One-pager"], ["detailed", "Full detailed report"]];
-/* the Arabic reports on screen: a tab for each, the pages as images, and a download button */
-function V2ReportViewer({ report: rep, initial: initial }) {
+/* the reports on screen: report tabs, language tabs, the pages as images, and a download button */
+function V2ReportViewer({ report: rep, initial: initial, initialLang: initialLang }) {
   var _a = (0, v.useState)(initial || "form"), kind = _a[0], setKind = _a[1];
+  var _l = (0, v.useState)(initialLang || "en"), lang = _l[0], setLang = _l[1];
   var _b = (0, v.useState)({}), pages = _b[0], setPages = _b[1];
   var _c = (0, v.useState)(""), err = _c[0], setErr = _c[1];
   var _d = (0, v.useState)(!1), busy = _d[0], setBusy = _d[1];
+  var key = kind + "-" + lang;
   (0, v.useEffect)(function () {
-    if (pages[kind]) return;
+    if (pages[key]) return;
     var live = !0;
-    V2arPages(rep, kind).then(function (r) { if (!live) return; var n = Object.assign({}, pages); n[kind] = r.pages.map(function (P) { return P.cv.toDataURL("image/jpeg", 0.9); }); setPages(n); })
+    V2arPages(rep, kind, lang).then(function (r) { if (!live) return; setPages(function (old) { var n = Object.assign({}, old); n[key] = r.pages.map(function (P) { return P.cv.toDataURL("image/jpeg", 0.9); }); return n; }); })
       .catch(function (e) { if (live) setErr("Could not prepare the report: " + e.message); });
     return function () { live = !1; };
-  }, [kind]);
-  async function dl() { setBusy(!0); try { await V2downloadReport(rep, kind); } catch (e) { setErr("Could not download: " + e.message); } finally { setBusy(!1); } }
-  return y("div", { className: "v2-viewer", "data-v2-viewer": kind, children: [
+  }, [key]);
+  async function dl() { setBusy(!0); try { await V2downloadReport(rep, kind, lang); } catch (e) { setErr("Could not download: " + e.message); } finally { setBusy(!1); } }
+  return y("div", { className: "v2-viewer", "data-v2-viewer": key, children: [
     y("div", { className: "v2-viewer__bar", children: [
-      d("div", { className: "v2-seg", role: "tablist", children: V2KINDS.map(function (k) {
-        return d("button", { type: "button", role: "tab", "aria-selected": kind === k[0], className: kind === k[0] ? "on" : "", "data-v2-tab": k[0], onClick: function () { setKind(k[0]); setErr(""); }, children: k[1] }, k[0]);
-      }) }),
-      y(ne, { type: "button", size: "touch", disabled: busy, onClick: dl, "data-v2-viewdl": kind, children: [d(Cv, { className: "size-4", "aria-hidden": !0 }), " ", busy ? "Preparing PDF\u2026" : "Download " + (kind === "form" ? "one-pager" : "full report") + " (PDF)"] }),
+      y("div", { className: "v2-viewer__tabs", children: [
+        d("div", { className: "v2-seg", role: "tablist", "aria-label": "Report", children: V2KINDS.map(function (k) {
+          return d("button", { type: "button", role: "tab", "aria-selected": kind === k[0], className: kind === k[0] ? "on" : "", "data-v2-tab": k[0], onClick: function () { setKind(k[0]); setErr(""); }, children: k[1] }, k[0]);
+        }) }),
+        d("div", { className: "v2-seg", role: "tablist", "aria-label": "Language", children: V2LANGS.map(function (l) {
+          return d("button", { type: "button", role: "tab", "aria-selected": lang === l[0], className: lang === l[0] ? "on" : "", "data-v2-langtab": l[0], onClick: function () { setLang(l[0]); setErr(""); }, children: l[1] }, l[0]);
+        }) }),
+      ] }),
+      y(ne, { type: "button", size: "touch", disabled: busy, onClick: dl, "data-v2-viewdl": key, children: [d(Cv, { className: "size-4", "aria-hidden": !0 }), " ", busy ? "Preparing PDF\u2026" : "Download PDF (" + (lang === "en" ? "English" : "Arabic") + ")"] }),
     ] }),
     err && d("p", { role: "alert", className: "v2-status", style: { background: "#f6e6e0", color: "#9a4f37" }, children: err }),
-    pages[kind] ? d("div", { className: "v2-viewer__pages", children: pages[kind].map(function (src, i) {
-      return d("img", { src: src, alt: (kind === "form" ? "One-pager" : "Full detailed report") + ", page " + (i + 1), className: "v2-viewer__page" }, kind + i);
+    pages[key] ? d("div", { className: "v2-viewer__pages", children: pages[key].map(function (src, i) {
+      return d("img", { src: src, alt: (kind === "form" ? "One-pager" : "Full detailed report") + ", page " + (i + 1), className: "v2-viewer__page" }, key + i);
     }) }) : !err && d("p", { className: "v2-viewer__loading", children: "Preparing the report\u2026" }),
   ] });
 }
 V2ReportViewer.__eapClient = !0;
-/* Open report: each report can be viewed on screen or downloaded */
+/* Open report: each report, in English or Arabic, viewed on screen or downloaded */
 function V2OpenReport({ reportId: reportId, filename: filename, employeeId: employeeId, mine: mine, title: title }) {
   var _a = (0, v.useState)(!1), open = _a[0], setOpen = _a[1];
   var _b = (0, v.useState)(null), view = _b[0], setView = _b[1];
@@ -324,16 +335,21 @@ function V2OpenReport({ reportId: reportId, filename: filename, employeeId: empl
   return y("div", { className: "v2-open", children: [
     y("button", { type: "button", className: "v2-openbtn", "aria-expanded": open, "data-v2-open": reportId, onClick: function () { setOpen(!open); }, children: ["Open report ", d("span", { "aria-hidden": !0, children: open ? "\u25B4" : "\u25BE" })] }),
     open && d("div", { className: "v2-open__menu", children: V2KINDS.map(function (k) {
-      return y("div", { className: "v2-open__row", children: [
-        d("span", { className: "v2-open__name", children: k[1] }),
-        y("span", { className: "v2-open__acts", children: [
-          y("button", { type: "button", className: "v2-iconbtn v2-viewbtn", "data-v2-view": k[0], onClick: function () { setView(k[0]); }, children: ["View on screen"] }),
-          d(V2Dl, { reportId: reportId, filename: filename, kind: k[0], label: "Download" }),
-        ] }),
+      return y("div", { className: "v2-open__block", children: [
+        d("p", { className: "v2-open__name", children: k[1] }),
+        V2LANGS.map(function (l) {
+          return y("div", { className: "v2-open__row", children: [
+            d("span", { className: "v2-open__lang", children: l[1] }),
+            y("span", { className: "v2-open__acts", children: [
+              y("button", { type: "button", className: "v2-iconbtn v2-viewbtn", "data-v2-view": k[0], "data-v2-viewlang": l[0], onClick: function () { setView([k[0], l[0]]); }, children: ["View on screen"] }),
+              d(V2Dl, { reportId: reportId, filename: filename, kind: k[0], lang: l[0], label: "Download" }),
+            ] }),
+          ] }, l[0]);
+        }),
       ] }, k[0]);
     }) }),
     view && d(V2Modal, { title: title || "Assessment report", sub: "View on screen", onClose: close, wide: !0, children:
-      rep ? d(V2ReportViewer, { report: rep, initial: view }) : d("p", { className: "v2-empty", children: "This report could not be opened." }) }),
+      rep ? d(V2ReportViewer, { report: rep, initial: view[0], initialLang: view[1] }) : d("p", { className: "v2-empty", children: "This report could not be opened." }) }),
   ] });
 }
 V2OpenReport.__eapClient = !0;
@@ -362,6 +378,19 @@ function V2Reports({ employee: e, mine: mine }) {
     ] }) });
 }
 
+function V2dueIn(today, day) {
+  var n = Math.round((new Date(day + "T00:00:00Z") - new Date(today + "T00:00:00Z")) / 864e5);
+  return n === 0 ? "Due today" : n === 1 ? "1 day" : n + " days";
+}
+/* the summary strip at the top of the Overview */
+function V2Glance({ items: items }) {
+  return d("section", { className: "v2-glance v2-span2", "aria-label": "At a glance", children: items.map(function (it, i) {
+    return y("div", { className: "v2-glance__item" + (it.tone ? " v2-glance__item--" + it.tone : ""), children: [
+      d("span", { className: "v2-glance__icon", children: d(it.icon, { className: "size-4", "aria-hidden": !0 }) }),
+      y("div", { children: [d("p", { className: "v2-glance__label", children: it.label }), d("p", { className: "v2-glance__value", children: it.value }), it.sub && d("p", { className: "v2-glance__sub", children: it.sub })] }),
+    ] }, i);
+  }) });
+}
 /* ---------- the Overview ---------- */
 function V2Overview({ employeeId: id, actor: actor, mine: mine }) {
   var today = yt(new Date());
@@ -448,7 +477,7 @@ function V2Overview({ employeeId: id, actor: actor, mine: mine }) {
   var p = rk.peer, s = rk.self;
   var rankCard = d(V2Box, { icon: eo, title: "Ranking", sub: p ? "Peer result from " + p.round.label : "Peer ranking", className: "v2-span2", foot: "Ranking \xB7 peer result and the most recent self-ranking", children: y("div", { className: "v2-rankgrid", children: [
     y("dl", { className: "v2-rank", children: [
-      y("div", { className: "v2-fact v2-fact--big", children: [d("dt", { children: "Current ranking" }),
+      y("div", { className: "v2-fact v2-fact--big v2-fact--medal", children: [d("dt", { children: "Current ranking" }),
         mine ? y("dd", { children: ["—", d("small", { children: "Shared with you in your report" })] })
           : y("dd", { children: [p ? (p.tied > 1 ? "Joint " : "") + V2ord(p.rank) : "—", d("small", { children: p ? "of " + p.of + (p.tied > 1 ? " \xB7 " + p.tied + "-way tie" : "") : "No complete round yet" })] })] }),
       y("div", { className: "v2-fact v2-fact--big", children: [d("dt", { children: "Self-ranking" }),
@@ -462,5 +491,14 @@ function V2Overview({ employeeId: id, actor: actor, mine: mine }) {
     ] }) : d("p", { className: "v2-empty", children: "No self-ranking submitted yet." }),
   ] }) });
 
-  return y("div", { className: "v2-ov", "data-v2-overview": id, children: [cv, jdCard, kpiCard, workCard, leadCard, rankCard, d(V2Reports, { employee: e, mine: mine })] });
+  var overdue = active.filter(function (r) { return r.effective_deadline < today; }).length, projects = active.filter(function (r) { return r.kind === "project"; }).length;
+  var exp = V2years(e.career_start, today);
+  var glance = d(V2Glance, { items: [
+    { icon: xr, label: "Experience", value: exp ? exp.y + " yrs" : "\u2014", sub: "Joined " + (e.started_at ? V2month(e.started_at) : "\u2014") },
+    { icon: ji, label: "Active work", value: String(active.length), sub: projects + " projects \xB7 " + (active.length - projects) + " tasks" },
+    { icon: ua, label: "Overdue", value: String(overdue), sub: overdue ? "needs attention" : "all on track", tone: overdue ? "warn" : "ok" },
+    { icon: xr, label: "Committees & delegations", value: committees.length + " \xB7 " + delegations.length, sub: "delegations in the last 30 days" },
+    { icon: eo, label: "Peer ranking", value: mine ? "\u2014" : p ? (p.tied > 1 ? "Joint " : "") + V2ord(p.rank) : "\u2014", sub: s && s.position ? "Self-ranking " + V2ord(s.position) : "No self-ranking yet", tone: "gold" },
+  ] });
+  return y("div", { className: "v2-ov", "data-v2-overview": id, children: [glance, cv, jdCard, kpiCard, workCard, leadCard, rankCard, d(V2Reports, { employee: e, mine: mine })] });
 }

@@ -76,6 +76,13 @@ window.__cpcDemoModules.push(function (api) {
     3: ["مريم النعيمي", "الدرجة الثالثة", "الدرجة الثانية", "مسؤول بيانات", "050 433 9054", "1995-02-21", "784-1995-0000003-3", "العين", "بكالوريوس علم البيانات", "جامعة خليفة", [["2023", "يفوق التوقعات"], ["2024", "يفوق التوقعات"], ["2025", "استثنائي"]]],
     4: ["خالد الحمادي", "الدرجة الأولى", "الدرجة الخاصة", "مستشار قانوني أول", "050 450 1188", "1985-11-30", "784-1985-0000004-4", "أبوظبي", "ماجستير القانون العام", "جامعة السوربون أبوظبي", [["2023", "يلبي التوقعات"], ["2024", "يفوق التوقعات"], ["2025", "يفوق التوقعات"]]],
   };
+  var SCALE_AR = { "Excellent": "ممتاز", "Very Good": "جيد جداً", "Good": "جيد", "Poor": "ضعيف", "Very Poor": "ضعيف جداً" };
+  var PROFILE_EN = {
+    1: ["Grade 1", "Special Grade", "Abu Dhabi", "Master of Public Policy", "United Arab Emirates University", [["2023", "Very Good"], ["2024", "Excellent"], ["2025", "Very Good"]]],
+    2: ["Grade 2", "Grade 1", "Abu Dhabi", "Bachelor of Business Administration", "Zayed University", [["2023", "Good"], ["2024", "Very Good"], ["2025", "Good"]]],
+    3: ["Grade 3", "Grade 2", "Al Ain", "Bachelor of Data Science", "Khalifa University", [["2023", "Very Good"], ["2024", "Very Good"], ["2025", "Excellent"]]],
+    4: ["Grade 1", "Special Grade", "Abu Dhabi", "Master of Public Law", "Sorbonne University Abu Dhabi", [["2023", "Good"], ["2024", "Very Good"], ["2025", "Very Good"]]],
+  };
   var KPIS_AR = {
     1: [["إحاطات تنفيذية مسلَّمة في الموعد المتفق عليه", "95% في الموعد"], ["توصيات سياسات تعتمدها اللجنة التنفيذية", "4 على الأقل كل ربع سنة"], ["إنجاز معالم الخطة التشغيلية", "90% من المعالم"], ["مسودات يتولاها أعضاء الفريق بالكامل", "50% على الأقل"]],
     2: [["معالم البرامج المنجزة في موعدها", "90% في الموعد"], ["رضا الشركاء بعد الفعاليات", "4.5 من 5 أو أعلى"], ["إغلاق الإجراءات المفتوحة خلال 10 أيام عمل", "85% من الإجراءات"], ["انحراف ميزانية الفعاليات", "ضمن ±5%"]],
@@ -127,6 +134,17 @@ window.__cpcDemoModules.push(function (api) {
         KPIS_AR[id].forEach(function (k, i) { db.run("update job_kpis set title_ar = ?, target_ar = ? where employee_id = ? and position = ? and source = 'ai_suggested'", [k[0], k[1], Number(id), i]); });
       });
       mark("schema-2");
+    }
+    // round 5: the reports in English too, and the five-step rating scale (ممتاز … ضعيف جداً)
+    if (!done("schema-3")) {
+      var pc = db.exec("PRAGMA table_info(employee_profile_ar)")[0].values.map(function (c) { return c[1]; });
+      ["rank_en", "target_rank_en", "workplace_en", "residence_en", "degree_en", "university_en", "evaluations_en"].forEach(function (c) { if (pc.indexOf(c) < 0) db.run("ALTER TABLE employee_profile_ar ADD COLUMN " + c + " text"); });
+      Object.keys(PROFILE_EN).forEach(function (id) {
+        var E = PROFILE_EN[id];
+        db.run("update employee_profile_ar set rank_en = ?, target_rank_en = ?, workplace_en = 'Crown Prince Court', residence_en = ?, degree_en = ?, university_en = ?, evaluations_en = ?, evaluations = ? where employee_id = ?",
+          [E[0], E[1], E[2], E[3], E[4], JSON.stringify(E[5]), JSON.stringify(E[5].map(function (x) { return [x[0], SCALE_AR[x[1]]]; })), Number(id)]);
+      });
+      mark("schema-3");
     }
     // The seeded history ends in September 2026, so a few delegations dated in the last month show the Overview's
     // "last 30 days" section working. They are added to the same table, so the full history stays complete.

@@ -1,34 +1,37 @@
 
-/* ---------- report downloads: two buttons, one-page form and Visual Scorecard ---------- */
+/* ---------- report downloads: one-pager and full detailed report, each in English and Arabic ---------- */
+var V2LANGS = [["en", "English"], ["ar", "\u0627\u0644\u0639\u0631\u0628\u064a\u0629"]];
 function V2Downloads(x) {
-  return y("div", { className: "flex flex-wrap gap-2 print:hidden", "data-v2-downloads": x.reportId, children: [
-    d(V2Dl, { reportId: x.reportId, filename: x.filename, kind: "form", label: "One-pager (PDF)" }),
-    d(V2Dl, { reportId: x.reportId, filename: x.filename, kind: "detailed", label: "Full detailed report (PDF)" }),
-  ] });
+  return y("div", { className: "v2-dlgrid print:hidden", "data-v2-downloads": x.reportId, children: [["form", "One-pager"], ["detailed", "Full detailed report"]].map(function (k) {
+    return y("div", { className: "v2-dlgrid__row", children: [d("span", { className: "v2-dlgrid__name", children: k[1] }),
+      V2LANGS.map(function (l) { return d(V2Dl, { reportId: x.reportId, filename: x.filename, kind: k[0], lang: l[0], label: l[1] }, l[0]); })] }, k[0]);
+  }) });
 }
-function V2fileName(name, kind) {
+function V2fileName(name, kind, lang) {
   var label = kind === "form" ? "Assessment Form (one page)" : kind === "detailed" ? "Assessment Report (detailed)" : "Performance Assessment";
+  if (kind === "form" || kind === "detailed") label += lang === "en" ? " - English" : " - Arabic";
   return String(name).replace("Performance Assessment", label);
 }
-function V2Dl({ reportId: e, filename: t, kind: K, label: LB }) {
+function V2Dl({ reportId: e, filename: t, kind: K, lang: LG, label: LB }) {
   var _a = (0, v.useState)(!1), busy = _a[0], setBusy = _a[1], _b = (0, v.useState)(""), err = _b[0], setErr = _b[1];
+  LG = LG === "en" ? "en" : "ar";
   async function go() {
     setBusy(!0); setErr("");
     try {
-      var r = await fetch("/api/reports/" + e + "/pdf?kind=" + K, { cache: "no-store" });
+      var r = await fetch("/api/reports/" + e + "/pdf?kind=" + K + "&lang=" + LG, { cache: "no-store" });
       if (!r.ok) { var j = await r.json().catch(function () { return {}; }); throw new Error(j.error || "Could not download the PDF."); }
       var url = URL.createObjectURL(await r.blob()), a = document.createElement("a");
-      a.href = url; a.download = V2fileName(t, K); document.body.appendChild(a); a.click(); a.remove();
+      a.href = url; a.download = V2fileName(t, K, LG); document.body.appendChild(a); a.click(); a.remove();
       setTimeout(function () { URL.revokeObjectURL(url); }, 6e4);
     } catch (x) { setErr(x instanceof Error ? x.message : "Could not download the PDF."); } finally { setBusy(!1); }
   }
   return y("div", { children: [
-    y(ne, { type: "button", size: "touch", variant: K === "form" ? "outline" : "default", disabled: busy, onClick: go, "data-v2-dl": K, children: [d(Cv, { className: "size-4", "aria-hidden": !0 }), " ", busy ? "Preparing PDF…" : LB] }),
+    y(ne, { type: "button", size: "touch", variant: "outline", disabled: busy, onClick: go, "data-v2-dl": K, "data-v2-lang": LG, children: [d(Cv, { className: "size-4", "aria-hidden": !0 }), " ", busy ? "Preparing\u2026" : LB] }),
     err && d("p", { role: "alert", className: "mt-2 max-w-sm text-sm text-red-700", children: err }),
   ] });
 }
 V2Dl.__eapClient = !0;
-async function V2Pdf(report, kind) { return kind === "form" ? V2FormPdf(report) : kind === "detailed" ? V2DetailedPdf(report) : V2ScorecardPdf(report); }
+async function V2Pdf(report, kind, lang) { return kind === "form" || kind === "detailed" ? V2ReportPdf(report, kind, lang === "en" ? "en" : "ar") : V2ScorecardPdf(report); }
 
 /* ---------- shared report figures ---------- */
 var V2RATINGS = ["Does not meet", "Partially meets", "Meets expectations", "Exceeds expectations", "Exceptional"];

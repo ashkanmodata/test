@@ -127,9 +127,9 @@ def patch_bundle(js):
     # 8b. two downloads per report: the one-page promotion form and the Visual Scorecard
     js = replace_once(js,
         'let l=await jG(s),{identity:u,meta:c}=s.snapshot,f=qu(u.displayName,c.periodStart,c.periodEnd);',
-        'let K0=new URL(e.url).searchParams.get("kind"),K=K0==="form"||K0==="detailed"?K0:"scorecard",l=await jG(s,K),{identity:u,meta:c}=s.snapshot,f=V2fileName(qu(u.displayName,c.periodStart,c.periodEnd),K);',
+        'let K0=new URL(e.url).searchParams.get("kind"),K=K0==="form"||K0==="detailed"?K0:"scorecard",LG=new URL(e.url).searchParams.get("lang")==="en"?"en":"ar",l=await jG(s,K,LG),{identity:u,meta:c}=s.snapshot,f=V2fileName(qu(u.displayName,c.periodStart,c.periodEnd),K,LG);',
         "PDF route kind")
-    js = replace_once(js, 'async function jG(e){return V2ScorecardPdf(e)}', 'async function jG(e,k){return V2Pdf(e,k)}', "PDF kind switch")
+    js = replace_once(js, 'async function jG(e){return V2ScorecardPdf(e)}', 'async function jG(e,k,lg){return V2Pdf(e,k,lg)}', "PDF kind switch")
     js = replace_once(js, 'function Ec({reportId:e,filename:t}){', 'function Ec(x){return d(V2Downloads,x)}function EcOld({reportId:e,filename:t}){', "download buttons")
 
     # 9. the v2 code itself, inside the bundle so it uses the app's own components and store
