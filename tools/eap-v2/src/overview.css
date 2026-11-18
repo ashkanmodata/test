@@ -269,3 +269,8 @@
 .v2-mgr__next span { display: block; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--v2-muted); margin-bottom: 2px; }
 .v2-mgr__note { margin: 0; display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: var(--v2-muted); }
 .v2-mgr__go { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 999px; background: var(--v2-green); color: #fff; font-size: 13px; font-weight: 600; }
+
+.v2-keyline { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.v2-keyline i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-left: 6px; }
+.v2-keyline i:first-child { margin-left: 0; }
+.v2-wl__bar span { display: block; }
