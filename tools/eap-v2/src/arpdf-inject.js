@@ -278,7 +278,7 @@ function V2arScale(P, A, x1, y1, w, h, labelSize) {
   P.txt(T.rating, x1 + w - 8, y1 + 11, 8.2, 700, K.gold);
   var pw = (w - 16 - 4 * 4) / 5, cx = [];
   for (var i = 0; i < 5; i++) {
-    var px = x1 + w - 8 - pw - i * (pw + 4), sel = i === si;
+    var pos = A.en ? 4 - i : i, px = x1 + w - 8 - pw - pos * (pw + 4), sel = i === si;   /* English reads Very Poor … Excellent left to right */
     cx.push(px + pw / 2);
     P.rr(px, y1 + 18, pw, 22, 4, sel ? K.green : K.card, sel ? K.green : K.line);
     P.fit(labels[i], px + pw / 2, y1 + 29.5, pw - 6, labelSize || 8, 700, sel ? "#fff" : K.ink, "center");
