@@ -35,7 +35,7 @@ var V2T = {
     secret: "سري للغاية", form: "النموذج التعريفي للتقييم", detailed: "التقرير التفصيلي للتقييم", period: "فترة التقييم",
     kind: function (m) { return m >= 12 ? "التقييم السنوي" : "تقييم " + m + " أشهر"; },
     secPersonality: "الشخصية والكفاءات الأساسية", secWork: "العمل ورأي القائد", tab: "بيانات الموظف",
-    grid: ["الاسم", "المسمى الوظيفي", "الرتبة الحالية", "جهة العمل", "تاريخ التعيين", "تاريخ الميلاد", "رقم الهوية الوطنية", "الهاتف المتحرك"],
+    grid: ["الاسم", "المسمى الوظيفي", "المستوى الوظيفي", "جهة العمل", "تاريخ التعيين", "تاريخ الميلاد", "رقم الهوية الوطنية", "الهاتف المتحرك"],
     evals: "التقييم السنوي لآخر 3 سنوات", qual: "المؤهلات العلمية (آخر مؤهل دراسي)", degree: "الشهادة/التخصص", uni: "الجامعة / الكلية",
     tiles: ["الانضباط", "إنجاز المسؤوليات", "القيادة", "الترتيب"],
     hours: "ساعات العمل المنجزة", hoursOf: function (d, r) { return d + " / " + r + " ساعة"; }, completed: "مسؤوليات مكتملة", scope: function (n) { return n + " ضمن نطاق التقييم"; },
@@ -68,12 +68,18 @@ var V2T = {
     rankCmp: "مقارنة الترتيب", ownOrder: "ترتيب الموظف للزملاء:", plan: "التوصية وخطة التطوير",
     devPlan: function (c, d) { return "تطوير " + c + ": " + d; }, training: function (a, b) { return "التدريب: " + a + " برامج مكتملة و" + b + " قيد التنفيذ أو التخطيط خلال الفترة."; },
     pdfTitle: { form: "النموذج التعريفي للتقييم", detailed: "التقرير التفصيلي للتقييم" },
+    opinionTitle: "رأي القائد المستند إلى ملاحظاته", ratingBasis: "مقترح بناءً على ملاحظات القائد وسجل الإنجاز",
+    opinion: function (o) {
+      var t = "تُظهر ملاحظات القائد خلال الفترة (" + o.notes + " ملاحظة) أن أبرز نقاط القوة " + (o.s1 ? "هي " + o.s1 + (o.s2 ? " و" + o.s2 : "") + "، إذ سُجّلت " + o.sn + " ملاحظات إيجابية في " + o.s1 + "." : "لم تتضح بعد.");
+      if (o.d1) t += " أما أولوية التطوير فهي " + o.d1 + " (" + o.dn + " ملاحظات): " + o.dtext;
+      return t + " وبناءً على ذلك يرى القائد أن التقدير المناسب هو «" + o.rating + "».";
+    },
   },
   en: {
     secret: "STRICTLY CONFIDENTIAL", form: "Assessment Profile Form", detailed: "Detailed Assessment Report", period: "Assessment period",
     kind: function (m) { return m >= 12 ? "Annual assessment" : m + "-month assessment"; },
     secPersonality: "Personality and core competencies", secWork: "Work and the leader's opinion", tab: "Employee data",
-    grid: ["Name", "Job title", "Current grade", "Organisation", "Joining date", "Date of birth", "National ID", "Mobile"],
+    grid: ["Name", "Job title", "Seniority", "Organisation", "Joining date", "Date of birth", "National ID", "Mobile"],
     evals: "Annual evaluation, last 3 years", qual: "Academic qualification (latest)", degree: "Degree / specialisation", uni: "University / college",
     tiles: ["DISCIPLINE", "DELIVERY", "LEADERSHIP", "RANKING"],
     hours: "Hours fulfilled", hoursOf: function (d, r) { return d + " / " + r + " h"; }, completed: "Responsibilities completed", scope: function (n) { return n + " in review scope"; },
@@ -106,6 +112,11 @@ var V2T = {
     rankCmp: "Ranking comparison", ownOrder: "The employee's own order:", plan: "Recommendation and development plan",
     devPlan: function (c, d) { return "Develop " + c.toLowerCase() + ": " + d; }, training: function (a, b) { return "Training: " + a + " programmes completed and " + b + " in progress or planned in the period."; },
     pdfTitle: { form: "Assessment Profile Form", detailed: "Detailed Assessment Report" },
+    opinionTitle: "Leader's opinion, formed from the manager's notes", ratingBasis: "Suggested from the manager's notes and the delivery record", words: "In the manager's words",
+    opinion: function (o) {
+      var t = o.insight ? o.insight : "The manager's notes (" + o.notes + " in the period) point to " + (o.s1 ? o.s1.toLowerCase() + (o.s2 ? " and " + o.s2.toLowerCase() : "") + " as the clearest strengths." : "no clear strength yet.") + (o.d1 ? " The main development priority is " + o.d1.toLowerCase() + ": " + o.dtext : "");
+      return t + " On this basis the leader supports a rating of " + o.rating + ".";
+    },
   },
 };
 
@@ -127,8 +138,8 @@ function V2arData(rep, lang) {
   return { F: F, T: T, en: en, pr: pr, emp: emp, kpis: kpis, evals: evals, names: names, comps: comps, topS: topS, topD: topD, si: si, ratingLabel: ratingLabel, positions: positions,
     name: en ? F.name : pr.name_ar || F.name, otherName: en ? (pr.name_ar || "") : F.name, title: en ? (emp.job_title || "") : (pr.title_ar || emp.job_title || ""),
     kindLabel: T.kind(F.months), periodLabel: V2dmy(F.sn.meta.periodStart) + " – " + V2dmy(F.sn.meta.periodEnd),
-    grid: en ? [F.name, emp.job_title || "", pr.rank_en || "", pr.workplace_en || "Crown Prince Court", V2dmy(emp.started_at), V2dmy(pr.birth_date), pr.national_id || "", pr.mobile || ""]
-      : [pr.name_ar || F.name, pr.title_ar || emp.job_title || "", pr.rank_ar || "", pr.workplace_ar || "ديوان ولي العهد", V2dmy(emp.started_at), V2dmy(pr.birth_date), pr.national_id || "", pr.mobile || ""],
+    grid: en ? [F.name, emp.job_title || "", pr.seniority_en || "", pr.workplace_en || "Crown Prince Court", V2dmy(emp.started_at), V2dmy(pr.birth_date), pr.national_id || "", pr.mobile || ""]
+      : [pr.name_ar || F.name, pr.title_ar || emp.job_title || "", pr.seniority_ar || "", pr.workplace_ar || "ديوان ولي العهد", V2dmy(emp.started_at), V2dmy(pr.birth_date), pr.national_id || "", pr.mobile || ""],
     degree: en ? pr.degree_en || "" : pr.degree_ar || "", university: en ? pr.university_en || "" : pr.university_ar || "" };
 }
 
@@ -248,6 +259,18 @@ function V2arLeader(A) {
   var T = A.T, F = A.F;
   return [T.ratingLine(A.ratingLabel), T.rankLine(F, T.ord), T.rec[F.ratingIdx] + (A.topD[0] ? T.focus(T.comp[A.topD[0].key]) : ".")];
 }
+/* the leader's opinion, formed from the manager's notes: the report's AI insight (English) or the note pattern */
+function V2arOpinion(A) {
+  var T = A.T, s1 = A.topS[0], s2 = A.topS[1], d1 = A.topD[0], N = A.F.narrative || {};
+  return T.opinion({ notes: A.F.notes, rating: A.ratingLabel, insight: A.en ? String(N.keyInsight || "").trim() : "",
+    s1: s1 && T.comp[s1.key], s2: s2 && T.comp[s2.key], sn: s1 ? s1.strengths : 0, d1: d1 && T.comp[d1.key], dn: d1 ? d1.development : 0, dtext: d1 ? T.dev[d1.key] : "" });
+}
+function V2arQuotes(A) {
+  var out = [];
+  A.comps.forEach(function (c) { c.entries.forEach(function (e) { out.push(e); }); });
+  function best(cat) { var l = out.filter(function (e) { return e.category === cat; }).map(function (e) { return e.text.trim(); }).sort(function (a, b) { return a.length - b.length; }); return l.find(function (t) { return t.length > 40; }) || l[0]; }
+  return [best("strength"), best("development")].filter(Boolean);
+}
 /* the five-step scale: best on the reading-start side, the marker on the rating, the fill from the low end */
 function V2arScale(P, A, x1, y1, w, h, labelSize) {
   var K = P.K, T = A.T, si = A.si, labels = V2SCALE[A.en ? "en" : "ar"];
@@ -306,7 +329,15 @@ function V2arPageOne(A, emblem, page, pages) {
     P.fit(t[2], cx, 241, 84, 7.6, 700, K.ink, "center");
     P.fit(t[3], cx, 253, 84, 6.8, 500, K.muted, "center");
   });
-  V2arScale(P, A, 28, 190, 384, 72);
+  V2arHead(P, 28, 412, 190, T.positions);
+  [[290, 412, 0], [160, 290, 1], [94, 160, 2], [28, 94, 3]].forEach(function (c) { P.cell(c[0], 205, c[1], 217, K.gray); P.fit(T.posHead[c[2]], (c[0] + c[1]) / 2, 211, c[1] - c[0] - 4, 7.2, 700, K.ink, "center"); });
+  [0, 1, 2].forEach(function (i) {
+    var r = A.positions[i] || ["", "", "", ""], y1 = 217 + i * 15, my = y1 + 7.5;
+    P.cell(290, y1, 412, y1 + 15, "#fff"); P.fit(r[0], 406, my, 112, 7.2, 500, K.ink);
+    P.cell(160, y1, 290, y1 + 15, "#fff"); P.fit(r[1], 284, my, 120, 7.2, 500, K.ink);
+    P.cell(94, y1, 160, y1 + 15, "#fff"); P.txt(r[2], 127, my, 7, 500, K.ink, "center");
+    P.cell(28, y1, 94, y1 + 15, "#fff"); P.fit(r[3], 61, my, 60, 7, 500, K.ink, "center");
+  });
   P.rr(566, 270, 240, 120, 7, K.card, K.line);
   P.txt(T.delivery, 798, 283, 9, 700, K.ink); P.txt("01", 576, 283, 7.5, 700, K.gold, "left");
   P.donut(620, 336, 30, 8, [[F.orig, K.green], [F.revised, K.gold], [F.late, K.terra]], String(F.completed), T.donut);
@@ -323,22 +354,20 @@ function V2arPageOne(A, emblem, page, pages) {
     P.txt(c.strengths + " / " + c.development, 306, yy, 7.2, 700, K.ink, "left");
   });
   P.fit(T.compsKey, 550, 381, 245, 6.4, 500, K.muted);
-  V2arHead(P, 28, 288, 270, T.positions);
-  [[196, 288, 0], [100, 196, 1], [64, 100, 2], [28, 64, 3]].forEach(function (c) { P.cell(c[0], 285, c[1], 300, K.gray); P.fit(T.posHead[c[2]], (c[0] + c[1]) / 2, 292.5, c[1] - c[0] - 4, 7.4, 700, K.ink, "center"); });
-  [0, 1, 2].forEach(function (i) {
-    var r = A.positions[i] || ["", "", "", ""], y1 = 300 + i * 30, y2 = y1 + 30, my = (y1 + y2) / 2;
-    P.cell(196, y1, 288, y2, "#fff"); P.para(r[0], 284, my - (P.wrap(r[0], 84, 7, 500).length > 1 ? 4.5 : 0), 84, 7, 500, K.ink, 9, 2);
-    P.cell(100, y1, 196, y2, "#fff"); P.para(r[1], 192, my - (P.wrap(r[1], 88, 7, 500).length > 1 ? 4.5 : 0), 88, 7, 500, K.ink, 9, 2);
-    P.cell(64, y1, 100, y2, "#fff"); P.txt(r[2], 82, my, 6.8, 500, K.ink, "center");
-    P.cell(28, y1, 64, y2, "#fff"); P.fit(r[3], 46, my, 33, 6.8, 500, K.ink, "center");
-  });
-  var boxes = [[554.7, 806, T.boxes[0], "person", V2arPersonality(A, 2)], [291.3, 542.7, T.boxes[1], "work", T.work(F, A.kpis.length)], [28, 279.3, T.boxes[2], "leader", V2arLeader(A)]];
+  V2arScale(P, A, 28, 270, 260, 120, 6.8);
+  P.txt(T.ratingIs(A.ratingLabel), 280, 350, 11, 700, K.green);
+  P.fit(T.ratingBasis, 280, 368, 244, 6.8, 500, K.muted);
+  var boxes = [[554.7, 806, T.boxes[0], "person", V2arPersonality(A, 2)], [291.3, 542.7, T.boxes[1], "work", T.work(F, A.kpis.length)], [28, 279.3, T.boxes[2], "leader", null]];
   boxes.forEach(function (b) {
     P.rect(b[0], 398, b[1], 420, K.bar);
     P.icon(b[3], b[1] - 16, 409, 12.5);
     P.txt(b[2], b[1] - 36, 409.5, 10, 700, "#222");
     P.rr(b[0], 424, b[1] - b[0], 138, 3, null, K.frame, 1.1);
-    P.bullets(b[4], b[1] - 8, 437, b[1] - b[0] - 16, 8, 11.6, 556);
+    if (b[4]) P.bullets(b[4], b[1] - 8, 437, b[1] - b[0] - 16, 8, 11.6, 556);
+    else {
+      var oy = P.para(V2arOpinion(A), b[1] - 8, 437, b[1] - b[0] - 16, 7.8, 500, K.ink, 11.2, 8);
+      P.bullets([T.rankLine(F, T.ord)], b[1] - 8, oy + 6, b[1] - b[0] - 16, 7.6, 11, 556, K.green);
+    }
   });
   P.fit(T.foot(F.notes, F.observations), 421, 570, 760, 6.4, 500, K.muted, "center");
   return P;
@@ -412,22 +441,26 @@ function V2arPageWork(A, emblem, page, pages) {
   P.rect(l1, 84, l2, 106, K.bar); P.icon("leader", l2 - 14, 95, 10); P.txt(T.leader, l2 - 30, 95.5, 10, 700);
   V2arScale(P, A, l1, 112, l2 - l1, 64, 7.6);
   P.txt(T.ratingIs(A.ratingLabel), l2 - 10, 186, 8.6, 700, K.green);
-  y = 204; P.txt(T.reasons, l2, y, 9, 700, K.ink); y = P.bullets(T.reasonLines(F), l2, y + 14, l2 - l1, 8, 11.5, 572);
-  y += 4; P.txt(T.rankCmp, l2, y, 9, 700, K.ink); y += 14;
-  P.fit(T.rankLine(F, T.ord), l2, y, l2 - l1, 8, 500, K.ink); y += 14;
+  y = 202; P.txt(T.opinionTitle, l2, y, 9, 700, K.ink);
+  P.rr(l1, y + 7, l2 - l1, 4, 2, K.cream);
+  y = P.para(V2arOpinion(A), l2 - 6, y + 20, l2 - l1 - 12, 7.9, 500, K.ink, 11, 6) + 2;
+  if (A.en) { V2arQuotes(A).forEach(function (q) { y = P.para("\u201C" + q + "\u201D", l2 - 10, y, l2 - l1 - 20, 7.2, 500, K.muted, 10, 2) + 2; }); }
+  y += 6; P.txt(T.reasons, l2, y, 9, 700, K.ink); y = P.bullets(T.reasonLines(F), l2, y + 13, l2 - l1, 7.8, 10.8, 572);
+  y += 2; P.txt(T.rankCmp, l2, y, 9, 700, K.ink); y += 13;
+  P.fit(T.rankLine(F, T.ord), l2, y, l2 - l1, 7.8, 500, K.ink); y += 13;
   var order = F.own.slice().sort(function (a, b) { return a.position - b.position; });
   if (order.length) {
-    P.txt(T.ownOrder, l2, y, 8, 700, K.ink); y += 13;
+    P.txt(T.ownOrder, l2, y, 7.8, 700, K.ink); y += 12;
     order.forEach(function (o) {
-      P.rr(l2 - 170, y - 6.5, 170, 13, 3, o.self ? K.cream : "#fff");
-      P.txt(T.ord(o.position), l2 - 6, y, 7.6, 700, K.gold); P.txt(A.names[o.name] || o.name, l2 - 50, y, 7.6, o.self ? 700 : 500, K.ink); y += 14;
+      P.rr(l2 - 170, y - 6, 170, 12, 3, o.self ? K.cream : "#fff");
+      P.txt(T.ord(o.position), l2 - 6, y, 7.4, 700, K.gold); P.txt(A.names[o.name] || o.name, l2 - 50, y, 7.4, o.self ? 700 : 500, K.ink); y += 12.5;
     });
   }
-  y += 6; P.txt(T.plan, l2, y, 9, 700, K.ink); y += 14;
+  y += 6; P.txt(T.plan, l2, y, 9, 700, K.ink); y += 13;
   var plan = [T.rec[F.ratingIdx] + "."].concat(A.topD.slice(0, 2).map(function (c) { return T.devPlan(T.comp[c.key], T.dev[c.key]); }));
   var training = (F.sn.training || []), doneT = training.filter(function (t) { return t.status === "completed"; }).length;
   plan.push(T.training(doneT, training.length - doneT));
-  P.bullets(plan, l2, y, l2 - l1, 8, 11.5, 572);
+  P.bullets(plan, l2, y, l2 - l1, 7.8, 10.8, 574);
   return P;
 }
 

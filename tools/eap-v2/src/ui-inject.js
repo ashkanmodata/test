@@ -491,14 +491,5 @@ function V2Overview({ employeeId: id, actor: actor, mine: mine }) {
     ] }) : d("p", { className: "v2-empty", children: "No self-ranking submitted yet." }),
   ] }) });
 
-  var overdue = active.filter(function (r) { return r.effective_deadline < today; }).length, projects = active.filter(function (r) { return r.kind === "project"; }).length;
-  var exp = V2years(e.career_start, today);
-  var glance = d(V2Glance, { items: [
-    { icon: xr, label: "Experience", value: exp ? exp.y + " yrs" : "\u2014", sub: "Joined " + (e.started_at ? V2month(e.started_at) : "\u2014") },
-    { icon: ji, label: "Active work", value: String(active.length), sub: projects + " projects \xB7 " + (active.length - projects) + " tasks" },
-    { icon: ua, label: "Overdue", value: String(overdue), sub: overdue ? "needs attention" : "all on track", tone: overdue ? "warn" : "ok" },
-    { icon: xr, label: "Committees & delegations", value: committees.length + " \xB7 " + delegations.length, sub: "delegations in the last 30 days" },
-    { icon: eo, label: "Peer ranking", value: mine ? "\u2014" : p ? (p.tied > 1 ? "Joint " : "") + V2ord(p.rank) : "\u2014", sub: s && s.position ? "Self-ranking " + V2ord(s.position) : "No self-ranking yet", tone: "gold" },
-  ] });
-  return y("div", { className: "v2-ov", "data-v2-overview": id, children: [glance, cv, jdCard, kpiCard, workCard, leadCard, rankCard, d(V2Reports, { employee: e, mine: mine })] });
+  return y("div", { className: "v2-ov", "data-v2-overview": id, children: [cv, jdCard, kpiCard, workCard, leadCard, rankCard, d(V2Reports, { employee: e, mine: mine })] });
 }

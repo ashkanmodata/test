@@ -146,6 +146,14 @@ window.__cpcDemoModules.push(function (api) {
       });
       mark("schema-3");
     }
+    // round 6: seniority instead of a grade (Junior, Mid-level, Senior, Executive, Director)
+    if (!done("schema-4")) {
+      var sc = db.exec("PRAGMA table_info(employee_profile_ar)")[0].values.map(function (c) { return c[1]; });
+      ["seniority_en", "seniority_ar"].forEach(function (c) { if (sc.indexOf(c) < 0) db.run("ALTER TABLE employee_profile_ar ADD COLUMN " + c + " text"); });
+      var SEN = { 1: ["Senior", "أول"], 2: ["Mid-level", "متوسط"], 3: ["Mid-level", "متوسط"], 4: ["Executive", "تنفيذي"] };
+      Object.keys(SEN).forEach(function (id) { db.run("update employee_profile_ar set seniority_en = ?, seniority_ar = ? where employee_id = ?", [SEN[id][0], SEN[id][1], Number(id)]); });
+      mark("schema-4");
+    }
     // The seeded history ends in September 2026, so a few delegations dated in the last month show the Overview's
     // "last 30 days" section working. They are added to the same table, so the full history stays complete.
     if (!done("recent-delegations-1") && heId) {
