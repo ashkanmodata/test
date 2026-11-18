@@ -2,13 +2,13 @@
 /* ---------- report downloads: one-pager and full detailed report, each in English and Arabic ---------- */
 var V2LANGS = [["en", "English"], ["ar", "\u0627\u0644\u0639\u0631\u0628\u064a\u0629"]];
 function V2Downloads(x) {
-  return y("div", { className: "v2-dlgrid print:hidden", "data-v2-downloads": x.reportId, children: [["form", "One-pager"], ["detailed", "Full detailed report"]].map(function (k) {
+  return y("div", { className: "v2-dlgrid print:hidden", "data-v2-downloads": x.reportId, children: [["form", "Assessment Report"], ["detailed", "Detailed Assessment Report"]].map(function (k) {
     return y("div", { className: "v2-dlgrid__row", children: [d("span", { className: "v2-dlgrid__name", children: k[1] }),
       V2LANGS.map(function (l) { return d(V2Dl, { reportId: x.reportId, filename: x.filename, kind: k[0], lang: l[0], label: l[1] }, l[0]); })] }, k[0]);
   }) });
 }
 function V2fileName(name, kind, lang) {
-  var label = kind === "form" ? "Assessment Form (one page)" : kind === "detailed" ? "Assessment Report (detailed)" : "Performance Assessment";
+  var label = kind === "form" ? "Assessment Report" : kind === "detailed" ? "Detailed Assessment Report" : "Performance Assessment";
   if (kind === "form" || kind === "detailed") label += lang === "en" ? " - English" : " - Arabic";
   return String(name).replace("Performance Assessment", label);
 }

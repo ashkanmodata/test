@@ -83,6 +83,99 @@ window.__cpcDemoModules.push(function (api) {
     3: ["Grade 3", "Grade 2", "Al Ain", "Bachelor of Data Science", "Khalifa University", [["2023", "Very Good"], ["2024", "Very Good"], ["2025", "Excellent"]]],
     4: ["Grade 1", "Special Grade", "Abu Dhabi", "Master of Public Law", "Sorbonne University Abu Dhabi", [["2023", "Good"], ["2024", "Very Good"], ["2025", "Very Good"]]],
   };
+  /* each manager's real work: the shared seed families renamed to their own projects and tasks */
+  var REASON = {
+    "service continuity review": "The partner entity moved the joint continuity test to next week; the review closes after that test.",
+    "annual operating plan": "Finance issued a revised 2027 budget ceiling, so the plan's targets are being realigned before sign-off.",
+    "policy assurance framework": "Legal review of the final draft is still open; sign-off needs their comments first.",
+    "digital records rollout": "The vendor moved the migration window by two weeks after a failed test load.",
+    "leadership briefing pack": "The Board meeting moved to a later date and two agenda items were added.",
+    "interdepartmental coordination": "Two participating departments have not returned their comments on the joint protocol.",
+    "risk register refresh": "Risk owners are still confirming the updated mitigations for three high risks.",
+    "process improvement pilot": "The pilot group asked for one more cycle to compare results against the old process.",
+    "stakeholder service standards": "Partner entities requested a further consultation round before the standards are published.",
+    "budget planning review": "The budget circular from Finance arrived three weeks later than planned.",
+    "team capability programme": "The external trainer's availability moved the final session.",
+    "quarterly performance review": "Quarter-end data from two units is still being validated.",
+    "demo": "Waiting for final comments from the committee secretary.",
+  };
+  var REAL = {
+    1: { demo: [["Ethics Committee note on conflict-of-interest guidance", "Draft the committee note proposing updated conflict-of-interest guidance for policy staff, with options and a recommendation."],
+                ["Handover of the youth employment policy file", "Hand over the youth employment policy file, open actions and stakeholder contacts to the incoming analyst."]],
+      fam: { "service continuity review": ["Housing permits service continuity review", "Review continuity arrangements for the housing permits service with the Municipality and agree fallback steps for peak periods."],
+        "annual operating plan": ["Annual operating plan 2027 – policy priorities", "Set the policy priorities, milestones and owners for the 2027 operating plan and align them with the strategy office."],
+        "policy assurance framework": ["Policy assurance framework", "Define how policy papers are quality-checked before ExCo: evidence standards, review steps and sign-off."],
+        "digital records rollout": ["Digital records rollout – policy files", "Move the policy team's files into the new records system with the agreed classification and access rights."],
+        "leadership briefing pack": ["ExCo leadership briefing pack", "Prepare the ExCo pack: decision paper, talking points and evidence annex on the housing affordability review."],
+        "interdepartmental coordination": ["Housing permits interdepartmental coordination", "Coordinate the Municipality, Planning and Finance teams on a single process and timeline for housing permits."],
+        "risk register refresh": ["Policy risk register refresh", "Refresh the policy risk register: re-score risks, confirm owners and add mitigations for the housing review."],
+        "process improvement pilot": ["Executive briefing format pilot", "Pilot the decision-first briefing format with two directorates and measure turnaround and reader feedback."],
+        "stakeholder service standards": ["Citizen service standards – policy input", "Provide policy input to the citizen service standards: response times, escalation and fair-access principles."],
+        "budget planning review": ["Budget planning review – policy chapter", "Draft the policy chapter of the budget submission and cost the three priority policy options."],
+        "team capability programme": ["Policy analysts capability programme", "Run the analysts' programme on evidence review, options writing and presenting to ExCo."],
+        "quarterly performance review": ["Quarterly policy performance review", "Report quarterly progress on policy commitments, slippage and decisions needed from His Excellency."] } },
+    2: { demo: [["Post-event evaluation – National Day celebration", "Collect partner and visitor feedback on the National Day celebration and recommend changes for next year."],
+                ["Venue booking handover", "Hand over venue bookings, supplier contacts and open payments for the winter events season."]],
+      fam: { "service continuity review": ["Partner events continuity review", "Check backup venues, suppliers and contact trees for the partner events calendar and close any gaps."],
+        "annual operating plan": ["Annual operating plan 2027 – programme calendar", "Build the 2027 programme and events calendar with budgets, owners and partner commitments."],
+        "policy assurance framework": ["Partner agreements assurance framework", "Set the checks every partner agreement passes before signature: scope, budget, branding and legal review."],
+        "digital records rollout": ["Digital event registration rollout", "Roll out online registration and badge printing for all office events, replacing paper sign-in."],
+        "leadership briefing pack": ["Programme steering committee pack", "Prepare the steering committee pack: programme status, risks and decisions on next quarter's events."],
+        "interdepartmental coordination": ["National Day interdepartmental coordination", "Coordinate security, protocol, media and facilities teams for the National Day celebration."],
+        "risk register refresh": ["Programme risk register refresh", "Refresh programme risks (venues, suppliers, partner withdrawals) and confirm mitigations with owners."],
+        "process improvement pilot": ["Partner onboarding process pilot", "Pilot a single onboarding checklist for new partners and measure time from first contact to signed agreement."],
+        "stakeholder service standards": ["Visitor and partner service standards", "Agree service standards for visitors and partners: response times, accessibility and complaint handling."],
+        "budget planning review": ["Events budget planning review", "Review event costs against budget and propose savings for the 2027 programme."],
+        "team capability programme": ["Event coordinators capability programme", "Train the two event coordinators on supplier management, protocol and risk planning."],
+        "quarterly performance review": ["Quarterly programme performance review", "Report programme delivery, attendance, partner satisfaction and budget variance for the quarter."] } },
+    3: { demo: [["Data catalogue – first release", "Publish the first release of the office data catalogue: datasets, owners, refresh dates and access rules."],
+                ["Access permissions review", "Review and clean up access permissions on the shared data platform after the team restructure."]],
+      fam: { "service continuity review": ["Data platform continuity review", "Test backup and restore of the reporting platform and document recovery steps for the executive dashboards."],
+        "annual operating plan": ["Annual operating plan 2027 – KPI baseline", "Set baselines and data sources for every 2027 operating-plan KPI and agree reporting frequency."],
+        "policy assurance framework": ["Data governance assurance framework", "Define data ownership, quality checks and approval steps for every dataset used in executive reporting."],
+        "digital records rollout": ["Records digitisation – archive migration", "Migrate the paper archive into the digital records system with metadata and retention rules."],
+        "leadership briefing pack": ["Executive dashboard briefing pack", "Prepare the dashboard pack for the leadership meeting: KPI trends, exceptions and data notes."],
+        "interdepartmental coordination": ["Data-sharing agreement coordination", "Coordinate the data-sharing agreement with the Statistics Centre and two partner entities."],
+        "risk register refresh": ["Data quality risk register refresh", "Update data-quality risks for the main datasets and agree controls with dataset owners."],
+        "process improvement pilot": ["Automated monthly reporting pilot", "Automate the monthly performance report from source systems and measure time saved and error rates."],
+        "stakeholder service standards": ["Customer service data standards", "Define the data standards behind customer-service reporting: definitions, timeliness and quality thresholds."],
+        "budget planning review": ["Budget analytics review", "Build the budget analytics model and variance views for the 2027 planning round."],
+        "team capability programme": ["Data literacy programme", "Run data literacy sessions for analysts and managers on reading dashboards and data quality."],
+        "quarterly performance review": ["Quarterly performance dataset", "Prepare and validate the quarterly performance dataset used in His Excellency's review."] } },
+    4: { demo: [["Ethics Committee case review", "Review the referred case for the Ethics Committee and advise on the applicable rules and options."],
+                ["Contract archive handover", "Hand over the signed-contracts archive and expiry tracker to the procurement team."]],
+      fam: { "service continuity review": ["Business continuity legal review", "Review legal obligations in business-continuity arrangements with partner entities and suppliers."],
+        "annual operating plan": ["Annual operating plan 2027 – legal annex", "Prepare the legal annex of the 2027 plan: regulatory changes, contracts due for renewal and legal risks."],
+        "policy assurance framework": ["Procurement policy assurance framework", "Set the legal checks in the procurement process, from tender documents to contract award."],
+        "digital records rollout": ["Digital records rollout – legal archive", "Move legal files and signed agreements into the records system with confidentiality controls."],
+        "leadership briefing pack": ["Legal briefing pack for leadership", "Brief leadership on pending legal matters, contract risks and decisions needed this quarter."],
+        "interdepartmental coordination": ["Partner MoU legal coordination", "Coordinate legal review of partner MoUs with the programmes, finance and protocol teams."],
+        "risk register refresh": ["Legal risk register refresh", "Refresh the legal risk register: litigation exposure, contract disputes and compliance gaps, with owners."],
+        "process improvement pilot": ["Contract review turnaround pilot", "Pilot standard templates and a triage step to cut contract review time to five working days."],
+        "stakeholder service standards": ["Complaints policy legal review", "Review the complaints and service-standards policy for legal compliance and consistency."],
+        "budget planning review": ["Contracts budget planning review", "Review contract commitments against the 2027 budget and flag renewals that need a decision."],
+        "team capability programme": ["Legal awareness programme for managers", "Train managers on contracts, delegations of authority and conflict-of-interest rules."],
+        "quarterly performance review": ["Quarterly legal compliance review", "Report legal compliance, open matters and contract turnaround for the quarter."] } },
+  };
+  /* [English, Arabic] insight per manager and report, consistent with their notes and work */
+  var INSIGHTS = {
+    1: { semiannual: ["Amina's analysis and briefings are consistently strong: the decision-first ExCo pack was adopted office-wide and the housing review framing kept the work focused. The recurring concern in the notes is delegation; drafts and late-stage work still come back to her, which slowed the Ethics Committee note.",
+           "التحليل والإحاطات قوية باستمرار: اعتُمد نموذج الإحاطة الجديد للجنة التنفيذية على مستوى المكتب، وأسهمت صياغة مراجعة الإسكان في تركيز العمل. والملاحظة المتكررة هي التفويض؛ إذ ما زالت المسودات والأعمال النهائية تعود إلى المحللة نفسها، ما أبطأ مذكرة لجنة الأخلاقيات."],
+         yearly: ["Across the year Amina delivered the policy agenda to a high standard and kept ExCo decisions moving. Delegation improved from April, with team members presenting and drafting Board sections, but slipped under the June budget deadline; making it routine is the main development step for next year.",
+           "على مدار العام أُنجزت أجندة السياسات بمستوى عالٍ وبقيت قرارات اللجنة التنفيذية تسير دون تأخير. تحسّن التفويض منذ أبريل بمشاركة الفريق في العرض وإعداد أقسام مجلس الإدارة، لكنه تراجع تحت ضغط موعد الميزانية في يونيو؛ وترسيخه هو خطوة التطوير الرئيسية للعام القادم."] },
+    2: { semiannual: ["Rashid's partner relationships and events are the office's strongest: the National Day programme and the partner forum ran smoothly and partners asked to repeat the format. Follow-through on agreed actions slipped in January and February; the action log started in late February is closing that gap.",
+           "علاقات الشركاء والفعاليات هي الأقوى في المكتب: نُفّذ برنامج اليوم الوطني ومنتدى الشركاء بسلاسة وطلب الشركاء تكرار الصيغة. وتراجعت متابعة الإجراءات المتفق عليها في يناير وفبراير، ويعمل سجل الإجراءات الذي بدأ أواخر فبراير على سد هذه الفجوة."],
+         yearly: ["Rashid delivered a full events calendar with high partner satisfaction and brought the registration platform live. The action log has made follow-through more reliable, though a March testing slip surfaced only when asked; raising risks earlier is the main development point.",
+           "نُفّذ تقويم فعاليات كامل برضا مرتفع من الشركاء وأُطلقت منصة التسجيل الإلكتروني. وجعل سجل الإجراءات المتابعة أكثر انتظاماً، مع أن تأخر اختبارات مارس لم يظهر إلا عند السؤال؛ ورفع المخاطر مبكراً هو نقطة التطوير الرئيسية."] },
+    3: { semiannual: ["Mariam has made the data the office relies on more trustworthy: the executive dashboard is now refreshed on time and data-quality issues are tracked to closure. The notes ask for shorter, decision-focused summaries for leadership and earlier escalation when source data is late.",
+           "أصبحت البيانات التي يعتمد عليها المكتب أكثر موثوقية: تُحدَّث لوحة المؤشرات التنفيذية في موعدها وتُتابع مشكلات جودة البيانات حتى إغلاقها. وتطلب الملاحظات ملخصات أقصر تركّز على القرار للقيادة، وتصعيداً أبكر عند تأخر بيانات المصدر."],
+         yearly: ["Over the year Mariam moved reporting from manual to automated and led the records migration with few errors. The next step is leadership presence: presenting insights directly to the steering committee rather than through others.",
+           "خلال العام تحوّل إعداد التقارير من يدوي إلى آلي، وقادت مسؤولة البيانات نقل السجلات بأخطاء قليلة. والخطوة التالية هي الحضور القيادي: عرض النتائج مباشرة على اللجنة التوجيهية بدلاً من نقلها عبر الآخرين."] },
+    4: { semiannual: ["Khalid's legal advice is sound and trusted: procurement files passed audit without major findings and the conflict-of-interest guidance was adopted. Contract turnaround is the recurring concern in the notes, with several reviews running past the agreed five days.",
+           "المشورة القانونية سليمة وموثوقة: اجتازت ملفات المشتريات التدقيق دون ملاحظات جوهرية واعتُمدت إرشادات تضارب المصالح. والملاحظة المتكررة هي سرعة مراجعة العقود، إذ تجاوزت عدة مراجعات مهلة الأيام الخمسة المتفق عليها."],
+         yearly: ["Khalid kept the office legally safe through a heavy contract year, and the triage pilot shortened review times in the second half. Sharing routine reviews with the team and flagging urgent matters earlier would free time for strategic legal work.",
+           "بقي المكتب في وضع قانوني آمن خلال عام مزدحم بالعقود، وقلّص النموذج التجريبي للفرز مدة المراجعة في النصف الثاني. وتوزيع المراجعات الروتينية على الفريق ورفع المسائل العاجلة مبكراً سيوفّران وقتاً للعمل القانوني الاستراتيجي."] },
+  };
   var KPIS_AR = {
     1: [["إحاطات تنفيذية مسلَّمة في الموعد المتفق عليه", "95% في الموعد"], ["توصيات سياسات تعتمدها اللجنة التنفيذية", "4 على الأقل كل ربع سنة"], ["إنجاز معالم الخطة التشغيلية", "90% من المعالم"], ["مسودات يتولاها أعضاء الفريق بالكامل", "50% على الأقل"]],
     2: [["معالم البرامج المنجزة في موعدها", "90% في الموعد"], ["رضا الشركاء بعد الفعاليات", "4.5 من 5 أو أعلى"], ["إغلاق الإجراءات المفتوحة خلال 10 أيام عمل", "85% من الإجراءات"], ["انحراف ميزانية الفعاليات", "ضمن ±5%"]],
@@ -166,6 +259,49 @@ window.__cpcDemoModules.push(function (api) {
       };
       Object.keys(MEASURE).forEach(function (id) { MEASURE[id].forEach(function (m, i) { db.run("update job_kpis set measure = ? where employee_id = ? and position = ? and source = 'ai_suggested'", [m, Number(id), i]); }); });
       mark("schema-5");
+    }
+    // round 8: real-world work for each manager. The seeded titles were one shared generic list ("Service continuity
+    // review - Sept 2025" for everyone, plus "Demo:" items); each becomes the manager's own project or task, with a
+    // description and real extension reasons. The frozen report snapshots get the same titles.
+    if (!done("real-work-1")) {
+      var map = {};
+      var rows8 = db.exec("select id, employee_id, title from responsibilities")[0];
+      (rows8 ? rows8.values : []).forEach(function (r) {
+        var id = r[0], emp = REAL[r[1]], title = r[2], t = null, desc = null, fam = null;
+        if (!emp) return;
+        if (/^Demo: prepare/.test(title)) { t = emp.demo[0][0]; desc = emp.demo[0][1]; fam = "demo"; }
+        else if (/^Demo: complete/.test(title)) { t = emp.demo[1][0]; desc = emp.demo[1][1]; fam = "demo"; }
+        else {
+          var m = /^(.*?) - (.*)$/.exec(title); if (!m) return;
+          fam = m[1].toLowerCase(); var f = emp.fam[fam]; if (!f) return;
+          t = f[0] + (m[2] === "current cycle" ? "" : " (" + m[2].replace("Sept ", "Sep ") + ")"); desc = f[1];
+        }
+        map[id] = t;
+        db.run("update responsibilities set title = ?, description = ? where id = ?", [t, desc, id]);
+        db.run("update responsibility_extensions set reason = ? where responsibility_id = ?", [REASON[fam] || REASON.demo, id]);
+      });
+      var snaps = db.exec("select id, snapshot from assessments where snapshot is not null")[0];
+      (snaps ? snaps.values : []).forEach(function (r) {
+        try {
+          var sn = JSON.parse(r[1]), items = sn && sn.responsibilities && sn.responsibilities.items;
+          if (!items) return;
+          items.forEach(function (it) { if (map[it.id]) it.title = map[it.id]; });
+          db.run("update assessments set snapshot = ? where id = ?", [JSON.stringify(sn), r[0]]);
+        } catch (e) { /* leave this snapshot */ }
+      });
+      mark("real-work-1");
+    }
+    // round 8: each seeded report gets its own insight from the manager's notes (they all shared one generic text)
+    if (!done("real-insights-1")) {
+      db.run("CREATE TABLE IF NOT EXISTS v2_report_insights (employee_id integer NOT NULL, period_end text NOT NULL, insight_ar text NOT NULL, PRIMARY KEY (employee_id, period_end))");
+      var reps = db.exec("select id, employee_id, period_kind, period_end, payload from assessments where period_kind in ('semiannual', 'yearly') and status = 'complete'")[0];
+      (reps ? reps.values : []).forEach(function (r) {
+        var ins = INSIGHTS[r[1]] && INSIGHTS[r[1]][r[2]];
+        if (!ins) return;
+        try { var pl = JSON.parse(r[4]); pl.keyInsight = ins[0]; db.run("update assessments set payload = ? where id = ?", [JSON.stringify(pl), r[0]]); } catch (e) { return; }
+        db.run("insert or replace into v2_report_insights (employee_id, period_end, insight_ar) values (?, ?, ?)", [r[1], r[3], ins[1]]);
+      });
+      mark("real-insights-1");
     }
     // The seeded history ends in September 2026, so a few delegations dated in the last month show the Overview's
     // "last 30 days" section working. They are added to the same table, so the full history stays complete.

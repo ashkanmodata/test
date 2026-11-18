@@ -290,7 +290,7 @@ async function V2downloadReport(rep, kind, lang) {
   var bytes = await V2Pdf(rep, kind, lang), url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" })), a = document.createElement("a");
   a.href = url; a.download = V2reportFile(rep, kind, lang); document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 6e4);
 }
-var V2KINDS = [["form", "One-pager"], ["detailed", "Full detailed report"]];
+var V2KINDS = [["form", "Assessment Report"], ["detailed", "Detailed Assessment Report"]];
 /* the reports on screen: report tabs, language tabs, the pages as images, and a download button */
 function V2ReportViewer({ report: rep, initial: initial, initialLang: initialLang }) {
   var _a = (0, v.useState)(initial || "form"), kind = _a[0], setKind = _a[1];
@@ -321,7 +321,7 @@ function V2ReportViewer({ report: rep, initial: initial, initialLang: initialLan
     ] }),
     err && d("p", { role: "alert", className: "v2-status", style: { background: "#f6e6e0", color: "#9a4f37" }, children: err }),
     pages[key] ? d("div", { className: "v2-viewer__pages", children: pages[key].map(function (src, i) {
-      return d("img", { src: src, alt: (kind === "form" ? "One-pager" : "Full detailed report") + ", page " + (i + 1), className: "v2-viewer__page" }, key + i);
+      return d("img", { src: src, alt: (kind === "form" ? "Assessment Report" : "Detailed Assessment Report") + ", page " + (i + 1), className: "v2-viewer__page" }, key + i);
     }) }) : !err && d("p", { className: "v2-viewer__loading", children: "Preparing the report\u2026" }),
   ] });
 }
@@ -357,7 +357,7 @@ function V2Reports({ employee: e, mine: mine }) {
   var today = yt(new Date());
   var anchor = (V2one("select anchor_date from assessment_settings where id = 1") || {}).anchor_date || "2025-09-01";
   var kinds = [["semiannual", "6-month review", 6], ["yearly", "Annual review", 12]];
-  return d(V2Box, { icon: zo, title: "Assessment reports", sub: "Cycle starts " + ge(anchor) + " \xB7 two reports each: one-pager and full detailed report", className: "v2-span2", foot: "Reports \xB7 frozen at generation", children:
+  return d(V2Box, { icon: zo, title: "Assessment reports", sub: "Cycle starts " + ge(anchor) + " \xB7 two reports each: Assessment Report and Detailed Assessment Report", className: "v2-span2", foot: "Reports \xB7 frozen at generation", children:
     y("div", { className: "v2-reports", children: [
       y("div", { className: "v2-reports__who", children: [d(en, { name: e.display_name, employeeId: e.id, photoUpdatedAt: e.photo_updated_at, size: "md" }),
         y("div", { children: [d("h3", { className: "font-heading text-lg font-semibold", children: e.display_name }), d("p", { className: "text-sm text-muted-foreground", children: e.job_title })] })] }),
@@ -389,6 +389,93 @@ function V2Glance({ items: items }) {
       d("span", { className: "v2-glance__icon", children: d(it.icon, { className: "size-4", "aria-hidden": !0 }) }),
       y("div", { children: [d("p", { className: "v2-glance__label", children: it.label }), d("p", { className: "v2-glance__value", children: it.value }), it.sub && d("p", { className: "v2-glance__sub", children: it.sub })] }),
     ] }, i);
+  }) });
+}
+/* ---------- the dashboard: summary tiles, workload by manager, delivery health, manager cards ---------- */
+var V2PAL = ["#94713E", "#365C53", "#6E7FA6", "#B76C51"];
+function V2DashTop({ cards: cards }) {
+  var active = 0, overdue = 0, ext = 0;
+  cards.forEach(function (c) { active += c.activeCount; overdue += c.overdueCount; ext += c.pendingExtensions; });
+  var onTrack = Math.max(0, active - overdue), pct = active ? Math.round(onTrack / active * 100) : 0;
+  var max = Math.max(1, ...cards.map(function (c) { return c.activeCount; }));
+  var tiles = [
+    { label: "Active responsibilities", value: active, sub: "across " + cards.length + " senior managers", icon: ji, tone: "gold" },
+    { label: "On track", value: onTrack, sub: pct + "% of active work", icon: bv, tone: "green" },
+    { label: "Overdue", value: overdue, sub: overdue ? "past the approved deadline" : "nothing overdue", icon: ua, tone: "red" },
+    { label: "Extension requests", value: ext, sub: "awaiting your decision", icon: Tl, tone: "blue" },
+  ];
+  var R = 54, C = 2 * Math.PI * R, segs = [[onTrack, "#365C53"], [overdue, "#B76C51"]], off = 0;
+  return y("div", { className: "v2-dash", children: [
+    d("div", { className: "v2-dash__tiles", children: tiles.map(function (t, i) {
+      return y("div", { className: "v2-dtile v2-dtile--" + t.tone, children: [
+        d("span", { className: "v2-dtile__icon", children: d(t.icon, { className: "size-5", "aria-hidden": !0 }) }),
+        y("div", { children: [d("p", { className: "v2-dtile__label", children: t.label }), d("p", { className: "v2-dtile__value", children: t.value }), d("p", { className: "v2-dtile__sub", children: t.sub })] }),
+      ] }, i);
+    }) }),
+    y("div", { className: "v2-dash__row", children: [
+      y("section", { className: "v2-dcard", children: [
+        y("header", { className: "v2-dcard__head", children: [d("h2", { children: "Workload by manager" }), d("p", { children: "Active responsibilities \xB7 on track and overdue" })] }),
+        d("div", { className: "v2-wl", children: cards.map(function (c, i) {
+          var e = c.employee, ok = Math.max(0, c.activeCount - c.overdueCount);
+          return y(Ee, { prefetch: !1, href: "/employees/" + e.id, className: "v2-wl__row", children: [
+            d(en, { name: e.displayName, employeeId: e.id, photoUpdatedAt: e.photoUpdatedAt, size: "sm" }),
+            y("div", { className: "v2-wl__main", children: [
+              y("div", { className: "v2-wl__top", children: [d("span", { className: "v2-wl__name", children: e.displayName }), y("span", { className: "v2-wl__count", children: [c.activeCount, " active"] })] }),
+              y("div", { className: "v2-wl__bar", style: { width: Math.max(8, c.activeCount / max * 100) + "%" }, children: [
+                d("span", { className: "v2-wl__ok", style: { flexGrow: ok } }), d("span", { className: "v2-wl__late", style: { flexGrow: c.overdueCount } })] }),
+              y("p", { className: "v2-wl__meta", children: [ok, " on track \xB7 ", c.overdueCount, " overdue", c.pendingExtensions ? " \xB7 " + c.pendingExtensions + " extension request" + (c.pendingExtensions === 1 ? "" : "s") : ""] }),
+            ] }),
+          ] }, e.id);
+        }) }),
+      ] }),
+      y("section", { className: "v2-dcard", children: [
+        y("header", { className: "v2-dcard__head", children: [d("h2", { children: "Delivery health" }), d("p", { children: "All active work" })] }),
+        y("div", { className: "v2-health", children: [
+          y("svg", { viewBox: "0 0 140 140", className: "v2-health__ring", role: "img", "aria-label": pct + "% on track", children: [
+            d("circle", { cx: 70, cy: 70, r: R, fill: "none", stroke: "#EFEAE0", strokeWidth: 16 }),
+            segs.map(function (sg, i) { var len = active ? sg[0] / active * C : 0, el = d("circle", { cx: 70, cy: 70, r: R, fill: "none", stroke: sg[1], strokeWidth: 16, strokeDasharray: len + " " + (C - len), strokeDashoffset: -off, transform: "rotate(-90 70 70)", strokeLinecap: "butt" }, i); off += len; return el; }),
+            d("text", { x: 70, y: 68, textAnchor: "middle", className: "v2-health__pct", children: pct + "%" }),
+            d("text", { x: 70, y: 88, textAnchor: "middle", className: "v2-health__cap", children: "on track" }),
+          ] }),
+          y("ul", { className: "v2-health__legend", children: [
+            y("li", { children: [d("i", { style: { background: "#365C53" } }), "On track", d("b", { children: onTrack })] }),
+            y("li", { children: [d("i", { style: { background: "#B76C51" } }), "Overdue", d("b", { children: overdue })] }),
+            y("li", { children: [d("i", { style: { background: "#94713E" } }), "Extension requests", d("b", { children: ext })] }),
+          ] }),
+        ] }),
+      ] }),
+    ] }),
+  ] });
+}
+function V2ManagerCards({ cards: cards }) {
+  var today = yt(new Date());
+  return d("div", { className: "v2-mgrs", children: cards.map(function (c) {
+    var e = c.employee, ok = Math.max(0, c.activeCount - c.overdueCount), pct = c.activeCount ? Math.round(ok / c.activeCount * 100) : 0;
+    var pr = V2one("select seniority_en from employee_profile_ar where employee_id = ?", [e.id]) || {};
+    var next = V2responsibilities(e.id).filter(function (r) { return r.status === "active" && r.effective_deadline >= today; }).sort(function (a, b) { return a.effective_deadline.localeCompare(b.effective_deadline); })[0];
+    var last = V2one("select max(occurred_at) as d from notes where employee_id = ? and deleted_at is null and submitted_at is not null", [e.id]);
+    var days = last && last.d ? Math.round((new Date(today) - new Date(last.d)) / 864e5) : null;
+    var R = 26, C = 2 * Math.PI * R;
+    return y(Ee, { prefetch: !1, href: "/employees/" + e.id, className: "v2-mgr", "data-v2-manager": e.id, children: [
+      y("div", { className: "v2-mgr__head", children: [
+        d(en, { name: e.displayName, employeeId: e.id, photoUpdatedAt: e.photoUpdatedAt, size: "md" }),
+        y("div", { className: "v2-mgr__who", children: [d("h3", { children: e.displayName }), y("p", { children: [e.jobTitle, pr.seniority_en && d("span", { className: "v2-mgr__chip", children: pr.seniority_en })] })] }),
+        y("svg", { viewBox: "0 0 64 64", className: "v2-mgr__ring", role: "img", "aria-label": pct + "% on track", children: [
+          d("circle", { cx: 32, cy: 32, r: R, fill: "none", stroke: "#EFEAE0", strokeWidth: 7 }),
+          d("circle", { cx: 32, cy: 32, r: R, fill: "none", stroke: pct >= 75 ? "#365C53" : pct >= 50 ? "#94713E" : "#B76C51", strokeWidth: 7, strokeDasharray: (pct / 100 * C) + " " + C, transform: "rotate(-90 32 32)", strokeLinecap: "round" }),
+          d("text", { x: 32, y: 36, textAnchor: "middle", className: "v2-mgr__pct", children: pct + "%" }),
+        ] }),
+      ] }),
+      y("div", { className: "v2-mgr__stats", children: [
+        y("div", { children: [d("b", { children: c.activeCount }), d("span", { children: "Active" })] }),
+        y("div", { className: c.overdueCount ? "late" : "", children: [d("b", { children: c.overdueCount }), d("span", { children: "Overdue" })] }),
+        y("div", { className: c.pendingExtensions ? "ext" : "", children: [d("b", { children: c.pendingExtensions }), d("span", { children: "Extensions" })] }),
+      ] }),
+      y("div", { className: "v2-mgr__foot", children: [
+        y("p", { className: "v2-mgr__next", children: [d("span", { children: "Next deadline" }), next ? y(Fe, { children: [d("b", { children: next.title }), " \xB7 ", ge(next.effective_deadline)] }) : "Nothing upcoming"] }),
+        y("p", { className: "v2-mgr__note", children: [days == null ? "No notes yet" : days === 0 ? "Note written today" : "Last note " + days + " day" + (days === 1 ? "" : "s") + " ago", d("span", { className: "v2-mgr__go", children: ["Overview ", d(la, { className: "size-4", "aria-hidden": !0 })] })] }),
+      ] }),
+    ] }, e.id);
   }) });
 }
 /* ---------- the Overview ---------- */

@@ -91,6 +91,14 @@ def patch_bundle(js):
     js = replace_once(js, 'children:"Decisions, progress and conversations."', 'children:"Extension requests, overdue items and notes reminders."', "inbox subtitle")
     js = replace_once(js, 'children:[e.filter(i=>dL(i.kind)===1).length," to review"]', 'children:[e.filter(i=>dL(i.kind)===1).length," extension requests"]', "inbox badge")
 
+    # 5f. dashboard: modern summary (tiles, workload by manager, delivery health) and richer manager cards
+    js = replace_once(js,
+        'd(Vh,{managers:i.map(u=>({id:u.employee.id,name:u.employee.displayName,active:u.activeCount,overdue:u.overdueCount,extensions:u.pendingExtensions}))}),',
+        'd(V2DashTop,{cards:i}),', "dashboard summary")
+    a0 = js.index('i.length?d("div",{className:"grid gap-5 md:grid-cols-2",children:i.map(')
+    a1 = js.index(':d(ir,{icon:xr,message:"No active senior managers.', a0)
+    js = js[:a0] + 'i.length?d(V2ManagerCards,{cards:i})' + js[a1:]
+
     # 5c. employee header: a highlighted Notes button at the top right
     js = replace_once(js,
         'function sr({active:e,mine:t,...r}){return y(Fe,{children:[!t&&d(Cc,{}),d(mQ,{...r,profileActive:e===null}),',

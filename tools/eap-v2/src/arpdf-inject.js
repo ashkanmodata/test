@@ -32,7 +32,7 @@ var V2EN_DEV = { ownership_accountability: "Make delegated ownership explicit be
 /* every phrase the reports print, per language */
 var V2T = {
   ar: {
-    secret: "سري للغاية", form: "النموذج التعريفي للتقييم", detailed: "التقرير التفصيلي للتقييم", period: "فترة التقييم",
+    secret: "سري للغاية", form: "تقرير التقييم", detailed: "تقرير التقييم التفصيلي", period: "فترة التقييم",
     kind: function (m) { return m >= 12 ? "التقييم السنوي" : "تقييم " + m + " أشهر"; },
     secPersonality: "الشخصية والكفاءات الأساسية", secWork: "العمل ورأي القائد", tab: "بيانات الموظف",
     grid: ["الاسم", "المسمى الوظيفي", "المستوى الوظيفي", "جهة العمل", "تاريخ التعيين", "تاريخ الميلاد", "رقم الهوية الوطنية", "الهاتف المتحرك"],
@@ -67,7 +67,7 @@ var V2T = {
     reasonLines: function (F) { return ["المسؤوليات: أُنجزت " + F.completed + " مسؤوليات، منها " + F.orig + " في الموعد الأصلي و" + (F.orig + F.revised) + " في الموعد المعتمد.", "الانضباط: نسبة " + F.pct + "% من الساعات المطلوبة (أرقام عينة).", "القيادة: " + F.committees + " لجان و" + F.delegations + " تفويضات (" + F.points + " نقاط نشاط)."]; },
     rankCmp: "مقارنة الترتيب", ownOrder: "ترتيب الموظف للزملاء:", plan: "التوصية وخطة التطوير",
     devPlan: function (c, d) { return "تطوير " + c + ": " + d; }, training: function (a, b) { return "التدريب: " + a + " برامج مكتملة و" + b + " قيد التنفيذ أو التخطيط خلال الفترة."; },
-    pdfTitle: { form: "النموذج التعريفي للتقييم", detailed: "التقرير التفصيلي للتقييم" },
+    pdfTitle: { form: "تقرير التقييم", detailed: "تقرير التقييم التفصيلي" },
     kpiHead: "مؤشرات الأداء: هل يحقق العمل المستهدف؟", kpiStatus: ["محقق", "محقق جزئياً", "غير محقق", "لا تتوفر أدلة"],
     kpiEv: { ontime_eff: function (v, t) { return v + "% في الموعد المعتمد مقابل مستهدف " + t + "%"; }, ontime_orig: function (v, t) { return v + "% في الموعد الأصلي مقابل مستهدف " + t + "%"; },
       completion: function (v, t) { return v + "% من المسؤوليات مكتملة مقابل مستهدف " + t + "%"; }, notes: function (s, d, c, t) { return s + " ملاحظات قوة و" + d + " ملاحظات تطوير في " + c + " · المستهدف: " + t; },
@@ -76,13 +76,14 @@ var V2T = {
     kpiVerdict: function (m, p, x, n, gap) { return "مقابل مؤشرات الأداء، يحقق العمل " + m + " من " + n + " مؤشرات" + (p ? "، ويحقق " + p + " جزئياً" : "") + (x ? "، ولا يحقق " + x : "") + "." + (gap ? " أبرز فجوة: " + gap.title + " (" + gap.ev + ")." : " لا توجد فجوات جوهرية."); },
     opinionTitle: "رأي القائد المستند إلى ملاحظاته", ratingBasis: "مقترح بناءً على ملاحظات القائد وسجل الإنجاز",
     opinion: function (o) {
+      if (o.insight) return o.insight + " وبناءً على ذلك يرى القائد أن التقدير المناسب هو «" + o.rating + "».";
       var t = "تُظهر ملاحظات القائد خلال الفترة (" + o.notes + " ملاحظة) أن أبرز نقاط القوة " + (o.s1 ? "هي " + o.s1 + (o.s2 ? " و" + o.s2 : "") + "، إذ سُجّلت " + o.sn + " ملاحظات إيجابية في " + o.s1 + "." : "لم تتضح بعد.");
       if (o.d1) t += " أما أولوية التطوير فهي " + o.d1 + " (" + o.dn + " ملاحظات): " + o.dtext;
       return t + " وبناءً على ذلك يرى القائد أن التقدير المناسب هو «" + o.rating + "».";
     },
   },
   en: {
-    secret: "STRICTLY CONFIDENTIAL", form: "Assessment Profile Form", detailed: "Detailed Assessment Report", period: "Assessment period",
+    secret: "STRICTLY CONFIDENTIAL", form: "Assessment Report", detailed: "Detailed Assessment Report", period: "Assessment period",
     kind: function (m) { return m >= 12 ? "Annual assessment" : m + "-month assessment"; },
     secPersonality: "Personality and core competencies", secWork: "Work and the leader's opinion", tab: "Employee data",
     grid: ["Name", "Job title", "Seniority", "Organisation", "Joining date", "Date of birth", "National ID", "Mobile"],
@@ -117,7 +118,7 @@ var V2T = {
     reasonLines: function (F) { return ["Responsibilities: " + F.completed + " completed, " + F.orig + " on the original deadline and " + (F.orig + F.revised) + " on the approved deadline.", "Discipline: " + F.pct + "% of the required hours (sample figures).", "Leadership: " + F.committees + " committees and " + F.delegations + " delegations (" + F.points + " activity points)."]; },
     rankCmp: "Ranking comparison", ownOrder: "The employee's own order:", plan: "Recommendation and development plan",
     devPlan: function (c, d) { return "Develop " + c.toLowerCase() + ": " + d; }, training: function (a, b) { return "Training: " + a + " programmes completed and " + b + " in progress or planned in the period."; },
-    pdfTitle: { form: "Assessment Profile Form", detailed: "Detailed Assessment Report" },
+    pdfTitle: { form: "Assessment Report", detailed: "Detailed Assessment Report" },
     kpiHead: "KPIs: is the work meeting them?", kpiStatus: ["Met", "Partly met", "Not met", "No evidence"],
     kpiEv: { ontime_eff: function (v, t) { return v + "% on the approved deadline vs target " + t + "%"; }, ontime_orig: function (v, t) { return v + "% on the original deadline vs target " + t + "%"; },
       completion: function (v, t) { return v + "% of responsibilities completed vs target " + t + "%"; }, notes: function (s, d, c, t) { return s + " strength and " + d + " development notes on " + c.toLowerCase() + " · target: " + t; },
@@ -274,7 +275,8 @@ function V2arLeader(A) {
 /* the leader's opinion, formed from the manager's notes: the report's AI insight (English) or the note pattern */
 function V2arOpinion(A) {
   var T = A.T, s1 = A.topS[0], s2 = A.topS[1], d1 = A.topD[0], N = A.F.narrative || {};
-  return T.opinion({ notes: A.F.notes, rating: A.ratingLabel, insight: A.en ? String(N.keyInsight || "").trim() : "",
+  var ar = A.en ? null : V2one("select insight_ar from v2_report_insights where employee_id = ? and period_end = ?", [A.F.id, A.F.sn.meta.periodEnd]);
+  return T.opinion({ notes: A.F.notes, rating: A.ratingLabel, insight: A.en ? String(N.keyInsight || "").trim() : ar ? ar.insight_ar : "",
     s1: s1 && T.comp[s1.key], s2: s2 && T.comp[s2.key], sn: s1 ? s1.strengths : 0, d1: d1 && T.comp[d1.key], dn: d1 ? d1.development : 0, dtext: d1 ? T.dev[d1.key] : "" });
 }
 function V2arQuotes(A) {
