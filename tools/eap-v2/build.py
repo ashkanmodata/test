@@ -72,6 +72,22 @@ def patch_bundle(js):
         ',d(ne,{asChild:!0,size:"touch",variant:"outline",children:y(Ee,{prefetch:!1,href:`/employees/${u.id}/responsibilities`,children:["View work ",d(la,{className:"size-4"})]})})',
         '', "View work button")
 
+    # 5b. dashboard manager cards: the "Latest work update" panel becomes quick links (Notes, Report, Development Plan)
+    js = replace_once(js,
+        'y(Ee,{href:`/employees/${u.id}`,className:"block rounded-xl bg-muted/50 p-3 transition-colors hover:bg-gold-tint",children:[y("p",{className:"mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground",children:[d(Td,{className:"size-4"})," Latest work update"]}),d("p",{className:"text-sm font-medium",children:h?.title??"No recent progress updates"}),d("p",{className:"mt-1 line-clamp-1 text-sm text-muted-foreground",children:h?.detail??"Open their work to review responsibilities and start a conversation."}),h&&d("p",{className:"mt-2 text-xs text-muted-foreground",children:h.when})]})',
+        'd(V2QuickLinks,{id:u.id})', "manager card quick links")
+
+    # 5c. employee header: a highlighted Notes button at the top right
+    js = replace_once(js,
+        'function sr({active:e,mine:t,...r}){return y(Fe,{children:[!t&&d(Cc,{}),d(mQ,{...r,profileActive:e===null}),',
+        'function sr({active:e,mine:t,...r}){return y(Fe,{children:[!t&&d(Cc,{}),y("div",{className:"v2-head",children:[d(mQ,{...r,profileActive:e===null}),!t&&d(V2NotesButton,{employeeId:r.employeeId})]}),',
+        "header notes button")
+
+    # 5d. Notes page: no duplicate Drafts list; each timeline note says General or which project/task
+    js = replace_once(js, 'd(ite,{employeeId:n,drafts:w,selectedDate:g,filters:x}),', '', "notes drafts")
+    js = replace_once(js, 'd("span",{className:"font-heading text-base",children:ge(o.occurredAt)}),',
+        'd("span",{className:"font-heading text-base",children:ge(o.occurredAt)}),d(V2NoteTags,{noteId:o.id}),', "note tags")
+
     # 6. the Overview body (manager and the employee's own /me) is the v2 Overview
     js = replace_once(js,
         'r&&d(Pk,{}),y("div",{className:"space-y-6",children:[y("section",{className:"overview-activity"',
@@ -93,13 +109,13 @@ def patch_bundle(js):
     # 8b. two downloads per report: the one-page promotion form and the Visual Scorecard
     js = replace_once(js,
         'let l=await jG(s),{identity:u,meta:c}=s.snapshot,f=qu(u.displayName,c.periodStart,c.periodEnd);',
-        'let K=new URL(e.url).searchParams.get("kind")==="form"?"form":"scorecard",l=await jG(s,K),{identity:u,meta:c}=s.snapshot,f=V2fileName(qu(u.displayName,c.periodStart,c.periodEnd),K);',
+        'let K0=new URL(e.url).searchParams.get("kind"),K=K0==="form"||K0==="detailed"?K0:"scorecard",l=await jG(s,K),{identity:u,meta:c}=s.snapshot,f=V2fileName(qu(u.displayName,c.periodStart,c.periodEnd),K);',
         "PDF route kind")
     js = replace_once(js, 'async function jG(e){return V2ScorecardPdf(e)}', 'async function jG(e,k){return V2Pdf(e,k)}', "PDF kind switch")
     js = replace_once(js, 'function Ec({reportId:e,filename:t}){', 'function Ec(x){return d(V2Downloads,x)}function EcOld({reportId:e,filename:t}){', "download buttons")
 
     # 9. the v2 code itself, inside the bundle so it uses the app's own components and store
-    inject = read("src", "bundle-inject.js") + read("src", "pdf-inject.js")
+    inject = read("src", "bundle-inject.js") + read("src", "ui-inject.js") + read("src", "pdf-inject.js") + read("src", "arpdf-inject.js")
     js = replace_once(js, 'var Ar=window,Xx=', inject + '\nvar Ar=window,Xx=', "inject v2 code")
     return js
 
@@ -169,7 +185,7 @@ def patch_data(data):
 
     # the card's demo data: Card 5's accounts and files; its own version, so its saved copy is its own
     d = json.loads(json.dumps(demo["data"]["eap2"]))
-    d["version"] = d["version"] + "-v2.1"
+    d["version"] = d["version"] + "-v2.2"
     d["pdfs"] = {}
     demo["data"]["eap3"] = d
     return data

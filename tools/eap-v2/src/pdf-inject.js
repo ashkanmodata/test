@@ -2,11 +2,14 @@
 /* ---------- report downloads: two buttons, one-page form and Visual Scorecard ---------- */
 function V2Downloads(x) {
   return y("div", { className: "flex flex-wrap gap-2 print:hidden", "data-v2-downloads": x.reportId, children: [
-    d(V2Dl, { reportId: x.reportId, filename: x.filename, kind: "form", label: "One-page form (PDF)" }),
-    d(V2Dl, { reportId: x.reportId, filename: x.filename, kind: "scorecard", label: "Visual Scorecard (PDF)" }),
+    d(V2Dl, { reportId: x.reportId, filename: x.filename, kind: "form", label: "One-pager (PDF)" }),
+    d(V2Dl, { reportId: x.reportId, filename: x.filename, kind: "detailed", label: "Full detailed report (PDF)" }),
   ] });
 }
-function V2fileName(name, kind) { return kind === "form" ? String(name).replace("Performance Assessment", "Promotion Form (one page)") : name; }
+function V2fileName(name, kind) {
+  var label = kind === "form" ? "Assessment Form (one page)" : kind === "detailed" ? "Assessment Report (detailed)" : "Performance Assessment";
+  return String(name).replace("Performance Assessment", label);
+}
 function V2Dl({ reportId: e, filename: t, kind: K, label: LB }) {
   var _a = (0, v.useState)(!1), busy = _a[0], setBusy = _a[1], _b = (0, v.useState)(""), err = _b[0], setErr = _b[1];
   async function go() {
@@ -25,7 +28,7 @@ function V2Dl({ reportId: e, filename: t, kind: K, label: LB }) {
   ] });
 }
 V2Dl.__eapClient = !0;
-async function V2Pdf(report, kind) { return kind === "form" ? V2FormPdf(report) : V2ScorecardPdf(report); }
+async function V2Pdf(report, kind) { return kind === "form" ? V2FormPdf(report) : kind === "detailed" ? V2DetailedPdf(report) : V2ScorecardPdf(report); }
 
 /* ---------- shared report figures ---------- */
 var V2RATINGS = ["Does not meet", "Partially meets", "Meets expectations", "Exceeds expectations", "Exceptional"];
@@ -254,157 +257,4 @@ var V2AR_DEV = { ownership_accountability: "توضيح تفويض المسؤول
   communication_stakeholder: "التصعيد المبكر للاعتماديات الخارجية قبل أن تؤثر على الجدول الزمني.", decision_making_problem_solving: "تقديم توصية مبدئية مبكراً مع توضيح الافتراضات.",
   strategic_thinking_business_awareness: "ربط مؤشرات المشاريع بنتائج الخطة التشغيلية بعيدة المدى.", critical_thinking_innovation: "تجربة الأساليب الجديدة على نطاق محدود قبل تعميمها." };
 function V2dmy(s) { if (!s) return ""; var p = s.slice(0, 10).split("-"); return p[2] + "/" + p[1] + "/" + p[0]; }
-var V2fontsReady = null;
-function V2arabicFonts(doc) {
-  if (V2fontsReady) return V2fontsReady;
-  var A = window.__eapV2Assets;
-  function bytes(b64) { var bin = atob(b64), out = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; }
-  var list = [["400", A.dubaiRegular], ["500", A.dubaiMedium], ["700", A.dubaiBold]].map(function (f) { var ff = new FontFace("V2Dubai", bytes(f[1]), { weight: f[0] }); document.fonts.add(ff); return ff.load(); });
-  V2fontsReady = Promise.all(list);
-  return V2fontsReady;
-}
-async function V2FormPdf(rep) {
-  await V2arabicFonts();
-  var F = V2figures(rep), id = F.id;
-  var pr = V2one("select * from employee_profile_ar where employee_id = ?", [id]) || {};
-  var emp = V2one("select * from employees where id = ?", [id]) || {};
-  var roles = V2q("select * from employee_previous_roles where employee_id = ? order by started_on desc, position limit 2", [id]);
-  var kpiCount = (V2one("select count(*) as n from job_kpis where employee_id = ?", [id]) || { n: 0 }).n;
-  var evals = []; try { evals = JSON.parse(pr.evaluations || "[]"); } catch (e) { evals = []; }
-
-  var S = 3, W = 842, H = 595, cv = document.createElement("canvas");
-  cv.width = W * S; cv.height = H * S;
-  var g = cv.getContext("2d"), k = W / 1810;
-  g.scale(S, S); g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
-  g.scale(k, k); g.translate(-62, -17);   /* draw in the reference image's pixel space */
-  var BEIGE = "#EEEDE6", LABEL = "#E7E5DB", GRAY = "#D6D6D2", GRAY2 = "#C9C9C5", EDGE = "#BDB9A5", DOT = "#A9A79A", INK = "#2B2B2B", GOLD = "#A99C7F";
-  function rect(x1, y1, x2, y2, fill, stroke, dash, lw) {
-    if (fill) { g.fillStyle = fill; g.fillRect(x1, y1, x2 - x1, y2 - y1); }
-    if (stroke) { g.save(); g.strokeStyle = stroke; g.lineWidth = lw || 1.5; g.setLineDash(dash ? [3, 3] : []); g.strokeRect(x1, y1, x2 - x1, y2 - y1); g.restore(); }
-  }
-  function cell(x1, y1, x2, y2, fill) { rect(x1, y1, x2, y2, fill, DOT, true, 1.4); }
-  function font(size, weight) { g.font = (weight || 500) + " " + size + "px V2Dubai, 'Noto Kufi Arabic', sans-serif"; }
-  function txt(s, x, yy, size, weight, color, align) { font(size, weight); g.fillStyle = color || INK; g.direction = "rtl"; g.textAlign = align || "right"; g.textBaseline = "middle"; g.fillText(String(s == null ? "" : s), x, yy); }
-  function fit(s, x, yy, maxW, size, weight, color, align) { var sz = size; font(sz, weight); while (sz > 12 && g.measureText(String(s)).width > maxW) { sz -= 1; font(sz, weight); } txt(s, x, yy, sz, weight, color, align); }
-  function wrap(s, maxW, size, weight) {
-    font(size, weight); var words = String(s).split(/\s+/), lines = [], cur = "";
-    words.forEach(function (w) { var test = cur ? cur + " " + w : w; if (g.measureText(test).width > maxW && cur) { lines.push(cur); cur = w; } else cur = test; });
-    if (cur) lines.push(cur); return lines;
-  }
-
-  /* header band and frame */
-  rect(80, 45, 1855, 222, BEIGE, EDGE, false, 1.5);
-  rect(80, 222, 1855, 1246, null, "#9C9C9C", true, 1.4);
-  txt("سري للغاية", 967, 73, 26, 700, "#C00000", "center");
-  txt("النموذج التعريفي للترفيع", 1778, 132, 50, 700, "#111");
-  /* employee data tab */
-  g.fillStyle = "#E5E3DA"; g.beginPath(); g.moveTo(1528, 279); g.lineTo(1528, 244); g.quadraticCurveTo(1528, 236, 1536, 236); g.lineTo(1709, 236); g.quadraticCurveTo(1717, 236, 1717, 244); g.lineTo(1717, 279); g.closePath(); g.fill();
-  g.strokeStyle = "#CFCCBF"; g.lineWidth = 1.2; g.stroke();
-  txt("بيانات الموظف", 1698, 258, 21, 500, "#8A8672");
-
-  /* right block: rank, name, workplace, title, hire date */
-  var R = [[282, 334], [334, 381], [381, 431], [431, 488], [488, 536]];
-  var rLabels = ["الرتبة الحالية :", "الاسم :", "جهة العمل:", "المسمى الوظيفي:", "تاريخ التعيين"];
-  var rValues = [pr.rank_ar || "", pr.name_ar || F.name, pr.workplace_ar || "ديوان ولي العهد", pr.title_ar || emp.job_title || "", V2dmy(emp.started_at)];
-  R.forEach(function (r, i) {
-    cell(1518, r[0], 1717, r[1], LABEL); txt(rLabels[i], 1706, (r[0] + r[1]) / 2, 20, 700);
-    if (i === 0) {
-      cell(1385, r[0], 1518, r[1], "#fff"); fit(rValues[0], 1508, (r[0] + r[1]) / 2, 118, 18, 500);
-      cell(1167, r[0], 1385, r[1], LABEL); txt("الرتبة المرشح إليها :", 1375, (r[0] + r[1]) / 2, 20, 700);
-      cell(1050, r[0], 1167, r[1], "#fff"); fit(pr.target_rank_ar || "", 1158, (r[0] + r[1]) / 2, 100, 18, 500);
-    } else { cell(1050, r[0], 1518, r[1], "#fff"); fit(rValues[i], 1505, (r[0] + r[1]) / 2, 440, 20, 500); }
-  });
-  /* middle block: mobile, last three annual evaluations, birth date, national ID, residence */
-  cell(799, 282, 1043, 319, LABEL); txt("الهاتف المتحرك:", 1033, 300, 20, 700); cell(403, 282, 799, 319, "#fff"); txt(pr.mobile || "", 785, 300, 19, 500, INK);
-  cell(799, 319, 1043, 414, LABEL); txt("التقييم السنوي لآخر 3", 1033, 353, 20, 700); txt("سنوات:", 1033, 379, 20, 700);
-  var cols = [[669, 799], [540, 669], [403, 540]];
-  cols.forEach(function (c, j) {
-    var ev = evals[j] || [];
-    cell(c[0], 319, c[1], 361, GRAY2); txt(ev[0] || "", (c[0] + c[1]) / 2, 340, 19, 700, INK, "center");
-    cell(c[0], 361, c[1], 414, GRAY); fit(ev[1] || "", c[1] - 6, 387, c[1] - c[0] - 12, 16, 500);
-  });
-  [["تاريخ الميلاد:", 414, 452, V2dmy(pr.birth_date)], ["رقم الهوية الوطنية:", 452, 500, pr.national_id || ""], ["محل الإقامة:", 500, 538, pr.residence_ar || ""]].forEach(function (r) {
-    cell(799, r[1], 1043, r[2], LABEL); txt(r[0], 1033, (r[1] + r[2]) / 2, 20, 700); cell(403, r[1], 799, r[2], "#fff"); fit(r[3], 785, (r[1] + r[2]) / 2, 370, 19, 500);
-  });
-  /* photo */
-  rect(177, 280, 397, 535, BEIGE, EDGE, false, 1.5);
-  g.fillStyle = "#DAD7CB"; g.beginPath(); g.arc(287, 380, 46, 0, Math.PI * 2); g.fill();
-  g.beginPath(); g.ellipse(287, 505, 82, 60, 0, Math.PI, 0); g.fill();
-  /* qualifications */
-  cell(177, 546, 1717, 580, LABEL); txt("المؤهلات العلمية (آخر مؤهل دراسي)", 947, 563, 20, 700, INK, "center");
-  cell(956, 580, 1717, 614, GRAY2); txt("الشهادة/التخصص", 1336, 597, 20, 700, INK, "center");
-  cell(177, 580, 956, 614, GRAY2); txt("الجامعة / الكلية", 566, 597, 20, 700, INK, "center");
-  cell(956, 614, 1717, 643, "#fff"); fit(pr.degree_ar || "", 1336, 629, 740, 18, 500, INK, "center");
-  cell(177, 614, 956, 643, "#fff"); fit(pr.university_ar || "", 566, 629, 760, 18, 500, INK, "center");
-  /* last three positions */
-  cell(174, 667, 1715, 701, LABEL); txt("آخر ثلاث مناصب أو عمل المسند", 945, 684, 20, 700, INK, "center");
-  cell(1258, 701, 1715, 769, GRAY); txt("جهة العمل", 1487, 735, 20, 700, INK, "center");
-  cell(800, 701, 1258, 769, GRAY); txt("المسمى الوظيفي", 1029, 735, 20, 700, INK, "center");
-  cell(174, 701, 800, 736, GRAY); txt("فترة العمل", 487, 718, 20, 700, INK, "center");
-  cell(468, 736, 800, 769, GRAY); txt("من", 634, 752, 20, 700, INK, "center");
-  cell(174, 736, 468, 769, GRAY); txt("إلى", 321, 752, 20, 700, INK, "center");
-  var posRows = [[pr.workplace_ar || "ديوان ولي العهد", pr.title_ar || emp.job_title || "", V2dmy(emp.started_at), "حتى الآن"]]
-    .concat(roles.map(function (r) { return [r.employer_ar || r.employer, r.title_ar || r.title, V2dmy(r.started_on), V2dmy(r.ended_on)]; }));
-  [[769, 803], [803, 835], [835, 867]].forEach(function (r, i) {
-    var row = posRows[i] || ["", "", "", ""], my = (r[0] + r[1]) / 2;
-    cell(1258, r[0], 1715, r[1], "#fff"); fit(row[0], 1487, my, 440, 17, 500, INK, "center");
-    cell(800, r[0], 1258, r[1], "#fff"); fit(row[1], 1029, my, 440, 17, 500, INK, "center");
-    cell(468, r[0], 800, r[1], "#fff"); txt(row[2], 634, my, 17, 500, INK, "center");
-    cell(174, r[0], 468, r[1], "#fff"); txt(row[3], 321, my, 17, 500, INK, "center");
-  });
-
-  /* the three boxes: personality, work, leader's opinion */
-  var comps = F.comps.slice();
-  var topS = comps.slice().sort(function (a, b) { return b.strengths - a.strengths || a.development - b.development; }).filter(function (c) { return c.strengths > 0; }).slice(0, 2);
-  var topD = comps.slice().sort(function (a, b) { return b.development - a.development || a.strengths - b.strengths; }).filter(function (c) { return c.development > 0; })[0];
-  var personality = topS.map(function (c) { return V2AR_STR[c.key]; });
-  if (topD) personality.push("مجال التطوير: " + V2AR_DEV[topD.key]);
-  if (!personality.length) personality.push("لا توجد ملاحظات كافية في هذه الفترة.");
-  var work = [
-    "إنجاز " + F.completed + " من أصل " + F.scope + " مشاريع ومهام خلال فترة التقييم.",
-    F.orig + " في الموعد الأصلي، " + F.revised + " في الموعد المعدّل، " + F.late + " متأخرة.",
-    "الالتزام بالموعد المعتمد: " + (F.effPct == null ? "—" : F.effPct + "%") + " · الانضباط: " + F.pct + "%.",
-    "القيادة: " + F.committees + " لجان و" + F.delegations + " تفويضات · مؤشرات الأداء: " + kpiCount + ".",
-  ];
-  var ratingEn = V2RATINGS[F.ratingIdx], rec = F.ratingIdx >= 3 ? "يوصى بالترفيع" : F.ratingIdx === 2 ? "يوصى بالترفيع مع متابعة مجالات التطوير" : "لا يوصى بالترفيع في هذه المرحلة";
-  var leader = [
-    "التقدير المقترح: " + V2AR_RATING[ratingEn] + ".",
-    "الترتيب بين الأقران: " + (F.rank ? V2AR_ORD[F.rank] + (F.tied > 1 ? " (مشترك)" : "") + " من " + F.of : "—") + " · الترتيب الذاتي: " + (F.self ? V2AR_ORD[F.self] : "—") + ".",
-    rec + (topD ? "، مع التركيز على " + V2AR_COMP[topD.key] + "." : "."),
-  ];
-  function icon(kind, cx, cy) {
-    g.save();
-    g.fillStyle = "#E9E9E9"; g.beginPath(); g.arc(cx, cy, 40, 0, Math.PI * 2); g.fill();
-    g.fillStyle = "#fff"; g.beginPath(); g.arc(cx, cy, 31, 0, Math.PI * 2); g.fill();
-    g.strokeStyle = "#D8D8D8"; g.lineWidth = 2; g.stroke();
-    g.fillStyle = "#333"; g.strokeStyle = "#333"; g.lineWidth = 2;
-    if (kind === "person") { g.beginPath(); g.arc(cx, cy - 7, 7, 0, Math.PI * 2); g.fill(); g.beginPath(); g.moveTo(cx - 13, cy + 13); g.quadraticCurveTo(cx, cy - 3, cx + 13, cy + 13); g.closePath(); g.fill(); }
-    if (kind === "work") { g.strokeRect(cx - 15, cy - 7, 30, 21); g.strokeRect(cx - 6, cy - 13, 12, 6); g.beginPath(); g.moveTo(cx - 15, cy + 2); g.lineTo(cx + 15, cy + 2); g.stroke(); g.beginPath(); g.arc(cx + 13, cy - 12, 5, 0, Math.PI * 2); g.stroke(); }
-    if (kind === "leader") { g.beginPath(); g.arc(cx, cy - 15, 4.5, 0, Math.PI * 2); g.stroke(); g.strokeRect(cx - 6, cy - 9, 12, 9); g.strokeRect(cx - 10, cy, 20, 4); g.beginPath(); g.moveTo(cx - 7, cy + 4); g.lineTo(cx - 5, cy + 20); g.lineTo(cx + 5, cy + 20); g.lineTo(cx + 7, cy + 4); g.stroke(); }
-    g.restore();
-  }
-  function box(x1, x2, barTop, title, kind, iconX, lines) {
-    rect(x1, barTop, x2, barTop + 65, "#E3E1D6");
-    txt(title, iconX - 70, barTop + 32, 21, 700, "#222", "right");
-    icon(kind, iconX, barTop + 30);
-    g.save(); g.strokeStyle = GOLD; g.lineWidth = 2.5; g.beginPath(); g.roundRect(x1, barTop + 71, x2 - x1, 227, 4); g.stroke(); g.restore();
-    var yy = barTop + 98, maxW = x2 - x1 - 46;
-    lines.forEach(function (l) {
-      wrap(l, maxW, 17, 500).forEach(function (w, j) {
-        if (yy > barTop + 288) return;
-        if (j === 0) txt("•", x2 - 14, yy, 17, 700, GOLD);
-        txt(w, x2 - 30, yy, 17, 500, INK); yy += 25;
-      });
-      yy += 6;
-    });
-  }
-  box(1274, 1618, 916, "الشخصيـة", "person", 1562, personality);
-  box(801, 1193, 920, "العمـل", "work", 1132, work);
-  box(369, 713, 920, "رأي القائـد", "leader", 656, leader);
-
-  var doc = V2doc("landscape");
-  doc.addImage(cv.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, W, H, undefined, "FAST");
-  doc.setProperties({ title: (pr.name_ar || F.name) + " | النموذج التعريفي للترفيع", author: "Employee Assessment Platform" });
-  return new Uint8Array(doc.output("arraybuffer"));
-}
 /* ---- end of v2 ---- */

@@ -76,6 +76,12 @@ window.__cpcDemoModules.push(function (api) {
     3: ["مريم النعيمي", "الدرجة الثالثة", "الدرجة الثانية", "مسؤول بيانات", "050 433 9054", "1995-02-21", "784-1995-0000003-3", "العين", "بكالوريوس علم البيانات", "جامعة خليفة", [["2023", "يفوق التوقعات"], ["2024", "يفوق التوقعات"], ["2025", "استثنائي"]]],
     4: ["خالد الحمادي", "الدرجة الأولى", "الدرجة الخاصة", "مستشار قانوني أول", "050 450 1188", "1985-11-30", "784-1985-0000004-4", "أبوظبي", "ماجستير القانون العام", "جامعة السوربون أبوظبي", [["2023", "يلبي التوقعات"], ["2024", "يفوق التوقعات"], ["2025", "يفوق التوقعات"]]],
   };
+  var KPIS_AR = {
+    1: [["إحاطات تنفيذية مسلَّمة في الموعد المتفق عليه", "95% في الموعد"], ["توصيات سياسات تعتمدها اللجنة التنفيذية", "4 على الأقل كل ربع سنة"], ["إنجاز معالم الخطة التشغيلية", "90% من المعالم"], ["مسودات يتولاها أعضاء الفريق بالكامل", "50% على الأقل"]],
+    2: [["معالم البرامج المنجزة في موعدها", "90% في الموعد"], ["رضا الشركاء بعد الفعاليات", "4.5 من 5 أو أعلى"], ["إغلاق الإجراءات المفتوحة خلال 10 أيام عمل", "85% من الإجراءات"], ["انحراف ميزانية الفعاليات", "ضمن ±5%"]],
+    3: [["تحديث لوحات المؤشرات قبل موعد التقارير", "100% في الموعد"], ["معالجة مشكلات جودة البيانات ضمن المهلة", "90% من المشكلات"], ["السجلات المنقولة ضمن التحول الرقمي", "95% بنهاية العام"], ["الرد على الطلبات التحليلية خلال 5 أيام", "85% من الطلبات"]],
+    4: [["مراجعة العقود ضمن المهلة المتفق عليها", "95% خلال 5 أيام"], ["مخاطر قانونية لها مالك وخطة معالجة", "100% من السجل"], ["ملفات مشتريات ممتثلة عند التدقيق", "دون ملاحظات جوهرية"], ["تصعيد الاستشارات قبل مواعيد القرار", "100% من الحالات"]],
+  };
   var KPIS = {
     1: [["Executive briefings delivered on the agreed date", "95% on time"], ["Policy recommendations adopted by ExCo", "At least 4 a quarter"], ["Operating-plan milestones met", "90% of milestones"], ["Drafts owned end-to-end by team members", "At least 50% of drafts"]],
     2: [["Programme milestones delivered on schedule", "90% on time"], ["Partner satisfaction after events", "4.5 / 5 or higher"], ["Open actions closed within 10 working days", "85% of actions"], ["Event budget variance", "Within ±5%"]],
@@ -110,6 +116,17 @@ window.__cpcDemoModules.push(function (api) {
       var resp = db.exec("select id, title from responsibilities")[0];
       (resp ? resp.values : []).forEach(function (r) { db.run("update responsibilities set kind = ? where id = ?", [isProject(r[1]) ? "project" : "task", r[0]]); });
       mark("schema-1");
+    }
+    // round 2: notes linked to a project or task (none = general), and the KPIs' Arabic wording for the reports
+    if (!done("schema-2")) {
+      db.run("CREATE TABLE IF NOT EXISTS v2_note_links (note_entry_id integer PRIMARY KEY NOT NULL, responsibility_id integer, FOREIGN KEY (note_entry_id) REFERENCES note_entries(id) ON DELETE cascade, FOREIGN KEY (responsibility_id) REFERENCES responsibilities(id))");
+      var kc = db.exec("PRAGMA table_info(job_kpis)")[0].values.map(function (c) { return c[1]; });
+      if (kc.indexOf("title_ar") < 0) db.run("ALTER TABLE job_kpis ADD COLUMN title_ar text");
+      if (kc.indexOf("target_ar") < 0) db.run("ALTER TABLE job_kpis ADD COLUMN target_ar text");
+      Object.keys(KPIS_AR).forEach(function (id) {
+        KPIS_AR[id].forEach(function (k, i) { db.run("update job_kpis set title_ar = ?, target_ar = ? where employee_id = ? and position = ? and source = 'ai_suggested'", [k[0], k[1], Number(id), i]); });
+      });
+      mark("schema-2");
     }
     // The seeded history ends in September 2026, so a few delegations dated in the last month show the Overview's
     // "last 30 days" section working. They are added to the same table, so the full history stays complete.
