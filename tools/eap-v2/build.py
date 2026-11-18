@@ -120,6 +120,10 @@ def patch_bundle(js):
         'async function jG(e){return V2ScorecardPdf(e)}',
         "report PDF")
 
+    # 8c. the report pages show the Arabic reports on screen instead of the English web report
+    js = replace_once(js, 'function t0({snapshot:e,rating:t,narrative:r,ownRanking:a,overallRanking:n}){',
+        'function t0(x){return d(V2ReportViewer,{report:x})}function t0Old({snapshot:e,rating:t,narrative:r,ownRanking:a,overallRanking:n}){', "on-screen report")
+
     # 8b. two downloads per report: the one-page promotion form and the Visual Scorecard
     js = replace_once(js,
         'let l=await jG(s),{identity:u,meta:c}=s.snapshot,f=qu(u.displayName,c.periodStart,c.periodEnd);',

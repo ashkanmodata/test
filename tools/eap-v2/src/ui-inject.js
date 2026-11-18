@@ -31,7 +31,7 @@ function V2Modal({ title: title, sub: sub, onClose: onClose, children: children,
     function k(e) { if (e.key === "Escape") onClose(); }
     window.addEventListener("keydown", k); return function () { window.removeEventListener("keydown", k); };
   }, [onClose]);
-  return d("div", { className: "v2-modal", role: "dialog", "aria-modal": "true", "aria-label": title, onMouseDown: function (e) { if (e.target === e.currentTarget) onClose(); }, children:
+  var node = d("div", { className: "v2-modal", role: "dialog", "aria-modal": "true", "aria-label": title, onMouseDown: function (e) { if (e.target === e.currentTarget) onClose(); }, children:
     y("div", { className: "v2-modal__card" + (wide ? " v2-modal__card--wide" : ""), children: [
       y("div", { className: "v2-modal__head", children: [
         y("div", { children: [d("h2", { className: "v2-modal__title", children: title }), sub && d("p", { className: "v2-box__sub", children: sub })] }),
@@ -39,6 +39,8 @@ function V2Modal({ title: title, sub: sub, onClose: onClose, children: children,
       ] }),
       d("div", { className: "v2-modal__body", children: children }),
     ] }) });
+  /* above the app's sidebar and page layers */
+  try { return (0, $te.createPortal)(node, document.body); } catch (e) { return node; }
 }
 V2Modal.__eapClient = !0;
 
@@ -272,14 +274,66 @@ V2Item.__eapClient = !0;
 
 /* ---------- reports at the bottom of the Overview ---------- */
 function V2addMonths(s, n) { var p = s.split("-").map(Number), dt = new Date(Date.UTC(p[0], p[1] - 1 + n, p[2])); return dt.toISOString().slice(0, 10); }
-function V2OpenReport({ reportId: reportId, filename: filename, employeeId: employeeId, mine: mine }) {
-  var _a = (0, v.useState)(!1), open = _a[0], setOpen = _a[1];
-  return y("div", { className: "v2-open", children: [
-    y("button", { type: "button", className: "v2-openbtn", "aria-expanded": open, "data-v2-open": reportId, onClick: function () { setOpen(!open); }, children: ["Open report ", d("span", { "aria-hidden": !0, children: open ? "▴" : "▾" })] }),
-    open && y("div", { className: "v2-open__menu", children: [
-      d(V2Downloads, { reportId: reportId, filename: filename }),
-      d(Ee, { href: (mine ? "/me/reports/" : "/employees/" + employeeId + "/reports/") + reportId, className: "v2-link", children: "View on screen →" }),
+/* a report object (snapshot, rating, narrative, rankings) for the signed-in account, as the PDF route builds it */
+function V2loadReport(reportId, mine) {
+  try {
+    if (!mine) { var l = E.select().from(te).where(N(te.id, reportId)).get(); if (!l || l.status !== "complete") return null; var u = Wl(l); return u.ok ? Object.assign({}, u, $h(E, l)) : null; }
+    var emp = E.select().from(P).where(N(P.userId, V2actor())).get(); return emp ? Bh(E, emp.id, reportId) || null : null;
+  } catch (e) { console.error("v2 report", e); return null; }
+}
+function V2reportFile(rep, kind) { var m = rep.snapshot.meta; return V2fileName(qu(rep.snapshot.identity.displayName, m.periodStart, m.periodEnd), kind); }
+async function V2downloadReport(rep, kind) {
+  var bytes = await V2Pdf(rep, kind), url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" })), a = document.createElement("a");
+  a.href = url; a.download = V2reportFile(rep, kind); document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 6e4);
+}
+var V2KINDS = [["form", "One-pager"], ["detailed", "Full detailed report"]];
+/* the Arabic reports on screen: a tab for each, the pages as images, and a download button */
+function V2ReportViewer({ report: rep, initial: initial }) {
+  var _a = (0, v.useState)(initial || "form"), kind = _a[0], setKind = _a[1];
+  var _b = (0, v.useState)({}), pages = _b[0], setPages = _b[1];
+  var _c = (0, v.useState)(""), err = _c[0], setErr = _c[1];
+  var _d = (0, v.useState)(!1), busy = _d[0], setBusy = _d[1];
+  (0, v.useEffect)(function () {
+    if (pages[kind]) return;
+    var live = !0;
+    V2arPages(rep, kind).then(function (r) { if (!live) return; var n = Object.assign({}, pages); n[kind] = r.pages.map(function (P) { return P.cv.toDataURL("image/jpeg", 0.9); }); setPages(n); })
+      .catch(function (e) { if (live) setErr("Could not prepare the report: " + e.message); });
+    return function () { live = !1; };
+  }, [kind]);
+  async function dl() { setBusy(!0); try { await V2downloadReport(rep, kind); } catch (e) { setErr("Could not download: " + e.message); } finally { setBusy(!1); } }
+  return y("div", { className: "v2-viewer", "data-v2-viewer": kind, children: [
+    y("div", { className: "v2-viewer__bar", children: [
+      d("div", { className: "v2-seg", role: "tablist", children: V2KINDS.map(function (k) {
+        return d("button", { type: "button", role: "tab", "aria-selected": kind === k[0], className: kind === k[0] ? "on" : "", "data-v2-tab": k[0], onClick: function () { setKind(k[0]); setErr(""); }, children: k[1] }, k[0]);
+      }) }),
+      y(ne, { type: "button", size: "touch", disabled: busy, onClick: dl, "data-v2-viewdl": kind, children: [d(Cv, { className: "size-4", "aria-hidden": !0 }), " ", busy ? "Preparing PDF\u2026" : "Download " + (kind === "form" ? "one-pager" : "full report") + " (PDF)"] }),
     ] }),
+    err && d("p", { role: "alert", className: "v2-status", style: { background: "#f6e6e0", color: "#9a4f37" }, children: err }),
+    pages[kind] ? d("div", { className: "v2-viewer__pages", children: pages[kind].map(function (src, i) {
+      return d("img", { src: src, alt: (kind === "form" ? "One-pager" : "Full detailed report") + ", page " + (i + 1), className: "v2-viewer__page" }, kind + i);
+    }) }) : !err && d("p", { className: "v2-viewer__loading", children: "Preparing the report\u2026" }),
+  ] });
+}
+V2ReportViewer.__eapClient = !0;
+/* Open report: each report can be viewed on screen or downloaded */
+function V2OpenReport({ reportId: reportId, filename: filename, employeeId: employeeId, mine: mine, title: title }) {
+  var _a = (0, v.useState)(!1), open = _a[0], setOpen = _a[1];
+  var _b = (0, v.useState)(null), view = _b[0], setView = _b[1];
+  var close = (0, v.useCallback)(function () { setView(null); }, []);
+  var rep = view ? V2loadReport(reportId, mine) : null;
+  return y("div", { className: "v2-open", children: [
+    y("button", { type: "button", className: "v2-openbtn", "aria-expanded": open, "data-v2-open": reportId, onClick: function () { setOpen(!open); }, children: ["Open report ", d("span", { "aria-hidden": !0, children: open ? "\u25B4" : "\u25BE" })] }),
+    open && d("div", { className: "v2-open__menu", children: V2KINDS.map(function (k) {
+      return y("div", { className: "v2-open__row", children: [
+        d("span", { className: "v2-open__name", children: k[1] }),
+        y("span", { className: "v2-open__acts", children: [
+          y("button", { type: "button", className: "v2-iconbtn v2-viewbtn", "data-v2-view": k[0], onClick: function () { setView(k[0]); }, children: ["View on screen"] }),
+          d(V2Dl, { reportId: reportId, filename: filename, kind: k[0], label: "Download" }),
+        ] }),
+      ] }, k[0]);
+    }) }),
+    view && d(V2Modal, { title: title || "Assessment report", sub: "View on screen", onClose: close, wide: !0, children:
+      rep ? d(V2ReportViewer, { report: rep, initial: view }) : d("p", { className: "v2-empty", children: "This report could not be opened." }) }),
   ] });
 }
 V2OpenReport.__eapClient = !0;
@@ -300,7 +354,7 @@ function V2Reports({ employee: e, mine: mine }) {
           d("p", { className: "v2-review__period", children: ge(anchor) + " – " + ge(end) }),
           rep ? d("span", { className: "v2-badge" + (rep.shared_at ? " v2-green" : ""), children: rep.shared_at ? "Shared" : "Not shared yet" })
             : d("span", { className: "v2-badge", children: ended ? "Period ended" : "In progress" }),
-          rep ? d(V2OpenReport, { reportId: rep.id, filename: qu(e.display_name, anchor, end), employeeId: e.id, mine: mine })
+          rep ? d(V2OpenReport, { reportId: rep.id, filename: qu(e.display_name, anchor, end), employeeId: e.id, mine: mine, title: e.display_name + " \xB7 " + k[1] })
             : mine ? d("p", { className: "v2-muted", children: "Not shared with you yet." })
             : y("div", { className: "v2-review__gen", children: [d("p", { className: "v2-muted", children: ended ? "Ready to generate" : "Available after " + ge(end) }), ended && d(Nc, { employeeId: e.id, periodKind: k[0], enabled: !0 })] }),
         ] }, k[0]);

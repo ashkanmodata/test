@@ -380,6 +380,12 @@ function V2arPdf(pages, title) {
   doc.setProperties({ title: title, author: "Employee Assessment Platform" });
   return new Uint8Array(doc.output("arraybuffer"));
 }
+/* the report's pages as canvases, for the PDF and for viewing on screen */
+async function V2arPages(rep, kind) {
+  var emblem = await V2arabicFonts(), A = V2arData(rep);
+  var pages = kind === "form" ? [V2arPageOne(A, emblem, 1, 1)] : [V2arPageOne(A, emblem, 1, 3), V2arPagePersonality(A, emblem, 2, 3), V2arPageWork(A, emblem, 3, 3)];
+  return { A: A, pages: pages };
+}
 async function V2FormPdf(rep) {
   var emblem = await V2arabicFonts(), A = V2arData(rep);
   return V2arPdf([V2arPageOne(A, emblem, 1, 1)], A.nameAr + " | النموذج التعريفي للتقييم");
