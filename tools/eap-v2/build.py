@@ -174,6 +174,10 @@ def patch_data(data):
     if any(a["id"] == card["id"] for a in conf["assistants"]):
         raise SystemExit("the v2 card is already in assistants.json")
     conf["assistants"].insert(conf["assistants"].index(src) + 1, card)
+    # the portal no longer shows Project Dashboard and the original Employee Assessment Platform (kept in the file, hidden)
+    for a in conf["assistants"]:
+        if a["id"] in ("project-pipeline", "employee-assessment-platform"):
+            a["hidden"] = True
     api[key] = [rec[0], rec[1], rec[2], json.dumps(conf, ensure_ascii=False, indent=1)]
 
     # the card's files: Card 5's, at the new address; the bundle patched; the scorecard's font and library files
