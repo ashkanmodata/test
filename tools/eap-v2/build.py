@@ -99,6 +99,8 @@ def patch_bundle(js):
 
     # 5d. Notes page: no duplicate Drafts list; each timeline note says General or which project/task
     js = replace_once(js, 'd(ite,{employeeId:n,drafts:w,selectedDate:g,filters:x}),', '', "notes drafts")
+    js = replace_once(js, 'd(va,{employeeId:n,employeeName:o.displayName,focus:u,editable:!0}),', '', "notes page: no Focus block")
+    js = replace_once(js, 'active:"plan",mine:!1}),d(va,{employeeId:a,employeeName:n.displayName,focus:i,editable:!0}),', 'active:"plan",mine:!1}),', "plan page: no Focus block")
     js = replace_once(js, 'd("span",{className:"font-heading text-base",children:ge(o.occurredAt)}),',
         'd("span",{className:"font-heading text-base",children:ge(o.occurredAt)}),d(V2NoteTags,{noteId:o.id}),', "note tags")
 
