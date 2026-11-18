@@ -112,14 +112,6 @@
 .v2-link { color: var(--v2-gold); font-weight: 500; font-size: 14px; text-decoration: none; }
 .v2-link:hover { text-decoration: underline; }
 
-/* dashboard quick links */
-.v2-quick { border-radius: 12px; background: rgba(244, 239, 228, .6); padding: 12px; }
-.v2-quick__label { margin: 0 0 8px; font-size: 11.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--v2-muted); }
-.v2-quick__links { display: grid; gap: 8px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.v2-quick__link { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 8px; border-radius: 10px; background: #fff; border: 1px solid var(--v2-line); color: var(--v2-ink); font-size: 13px; font-weight: 500; text-align: center; text-decoration: none; }
-.v2-quick__link:hover { border-color: var(--v2-gold); color: var(--v2-gold); }
-.v2-quick__link svg { color: var(--v2-gold); flex: none; }
-
 /* modal */
 .v2-modal { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-start; justify-content: center; padding: 84px 16px 24px; background: rgba(32, 31, 26, .38); overflow-y: auto; }
 .v2-modal__card { width: 100%; max-width: 560px; border-radius: 18px; background: #fff; box-shadow: 0 24px 60px rgba(32, 31, 26, .25); }
@@ -149,3 +141,23 @@
 .v2-editor label { display: block; margin: 14px 0 6px; font-size: 13px; font-weight: 600; }
 .v2-iconbtn { border: 1px solid var(--v2-line); background: #fff; border-radius: 8px; padding: 0 12px; min-height: 36px; cursor: pointer; font: inherit; font-size: 13px; }
 .v2-iconbtn:hover { background: var(--v2-card); }
+
+/* the three note boxes (same look as the Notes page) */
+.v2-catnotes, .v2-catform { display: grid; gap: 12px; }
+.v2-catform__for { margin: 0; font-size: 14px; color: var(--v2-muted); }
+.v2-catform__for b { color: var(--v2-ink); font-weight: 600; }
+.v2-cat { border: 1px solid #E3DED3; border-radius: 12px; background: #fff; overflow: hidden; }
+.v2-cat__head { display: flex; align-items: center; gap: 6px; padding: 8px 12px; font-size: 13.5px; font-weight: 600; }
+.v2-cat--strength .v2-cat__head { background: #E6EFE8; color: #3E6B4C; }
+.v2-cat--development .v2-cat__head { background: #F7E4DA; color: #A4532F; }
+.v2-cat--training .v2-cat__head { background: #E2EAF2; color: #375A7A; }
+.v2-cat__body { padding: 10px 12px 12px; }
+.v2-cat__row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; margin-bottom: 10px; }
+.v2-editor .v2-cat__row textarea { min-height: 60px; }
+.v2-cat__x { border: 0; background: none; font-size: 15px; color: var(--v2-ink); cursor: pointer; width: 32px; height: 32px; border-radius: 8px; }
+.v2-cat__x:hover { background: var(--v2-card); }
+.v2-cat__add { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px; border: 1px solid var(--v2-line); border-radius: 10px; background: #fff; font: inherit; font-size: 13.5px; cursor: pointer; }
+.v2-cat__add:hover { background: var(--v2-card); }
+.v2-cat__list { margin: 0; padding: 8px 12px 10px; list-style: none; display: grid; gap: 8px; font-size: 14px; }
+.v2-cat__list li { display: grid; gap: 2px; }
+.v2-cat__date { font-size: 12px; color: var(--v2-muted); }

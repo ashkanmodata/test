@@ -75,7 +75,21 @@ def patch_bundle(js):
     # 5b. dashboard manager cards: the "Latest work update" panel becomes quick links (Notes, Report, Development Plan)
     js = replace_once(js,
         'y(Ee,{href:`/employees/${u.id}`,className:"block rounded-xl bg-muted/50 p-3 transition-colors hover:bg-gold-tint",children:[y("p",{className:"mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground",children:[d(Td,{className:"size-4"})," Latest work update"]}),d("p",{className:"text-sm font-medium",children:h?.title??"No recent progress updates"}),d("p",{className:"mt-1 line-clamp-1 text-sm text-muted-foreground",children:h?.detail??"Open their work to review responsibilities and start a conversation."}),h&&d("p",{className:"mt-2 text-xs text-muted-foreground",children:h.when})]})',
-        'd(V2QuickLinks,{id:u.id})', "manager card quick links")
+        '', "manager card latest work update")
+
+    # 5e. Inbox: only Extension request, Overdue and Notes reminder; no work updates
+    js = replace_once(js,
+        ',...o.map(({update:s,task:l,name:u})=>({id:`update-${s.id}`,employeeId:l.employeeId,name:u,title:l.title,detail:s.body,occurredAt:s.createdAt,when:cL(s.createdAt),href:i(l.employeeId,l.id),kind:"update"}))]',
+        ']', "inbox: no work updates")
+    js = replace_once(js, 'i=(s,l)=>`/employees/${s}/responsibilities#responsibility-${l}`;return V(e,{actorUserId:t.id,action:"dashboard.activity.view"',
+        'i=(s,l)=>`/employees/${s}#responsibility-${l}`;return V(e,{actorUserId:t.id,action:"dashboard.activity.view"', "inbox links to the overview pop-up")
+    js = replace_once(js, 'var dee="eap.inbox.filters"', 'var dee="eap.inbox.filters.v2"', "inbox filter key")
+    js = replace_once(js, 'function dL(e){return e==="update"?2:e==="feedback"?4:1}', 'function dL(e){return e==="overdue"?2:e==="feedback"?4:1}', "inbox groups")
+    js = replace_once(js, 'feedback:{label:"Feedback reminder",', 'feedback:{label:"Notes reminder",', "notes reminder label")
+    js = replace_once(js, 'a=[{bit:1,label:"Needs your review"},{bit:2,label:"Latest updates"},{bit:4,label:"Feedback"}]',
+        'a=[{bit:1,label:"Extension request"},{bit:2,label:"Overdue"},{bit:4,label:"Notes reminder"}]', "inbox filters")
+    js = replace_once(js, 'children:"Decisions, progress and conversations."', 'children:"Extension requests, overdue items and notes reminders."', "inbox subtitle")
+    js = replace_once(js, 'children:[e.filter(i=>dL(i.kind)===1).length," to review"]', 'children:[e.filter(i=>dL(i.kind)===1).length," extension requests"]', "inbox badge")
 
     # 5c. employee header: a highlighted Notes button at the top right
     js = replace_once(js,

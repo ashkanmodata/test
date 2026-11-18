@@ -43,8 +43,8 @@ function V2Modal({ title: title, sub: sub, onClose: onClose, children: children,
 V2Modal.__eapClient = !0;
 
 /* ---------- the New note dialog: general or project/task, one text box ---------- */
-function V2saveNote(employeeId, text, itemId) {
-  var who = V2actor(), today = yt(new Date()), now = V2now(), cat = V2classify(text);
+function V2saveNote(employeeId, text, itemId, category) {
+  var who = V2actor(), today = yt(new Date()), now = V2now(), cat = category || V2classify(text);
   if (!who) throw new Error("Sign in again to write notes.");
   Mt.db.run("BEGIN");
   try {
@@ -100,13 +100,54 @@ function V2NoteForm({ employeeId: employeeId, presetId: presetId, onDone: onDone
 }
 V2NoteForm.__eapClient = !0;
 
+/* the project/task pop-up's note form: project-specific, in the app's three note boxes */
+var V2CATS = ["strength", "development", "training"];
+function V2ItemNoteForm({ employeeId: employeeId, item: item, onDone: onDone, onCancel: onCancel }) {
+  var _a = (0, v.useState)({ strength: [""], development: [""], training: [""] }), boxes = _a[0], setBoxes = _a[1];
+  var _b = (0, v.useState)(""), msg = _b[0], setMsg = _b[1];
+  function set(c, i, val) { var n = Object.assign({}, boxes); n[c] = boxes[c].map(function (x, j) { return j === i ? val : x; }); setBoxes(n); setMsg(""); }
+  function add(c) { var n = Object.assign({}, boxes); n[c] = boxes[c].concat([""]); setBoxes(n); }
+  function remove(c, i) { var n = Object.assign({}, boxes); n[c] = boxes[c].filter(function (x, j) { return j !== i; }); if (!n[c].length) n[c] = [""]; setBoxes(n); }
+  function submit(ev) {
+    ev.preventDefault();
+    var rows = [];
+    V2CATS.forEach(function (c) { boxes[c].forEach(function (t) { if (t.trim()) rows.push([c, t]); }); });
+    if (!rows.length) { setMsg("Write at least one note."); return; }
+    try { rows.forEach(function (r) { V2saveNote(employeeId, r[1], item.id, r[0]); }); V2refresh(); if (onDone) onDone(rows.length); }
+    catch (e) { setMsg("Could not save: " + e.message); }
+  }
+  return y("form", { className: "v2-editor v2-catform", onSubmit: submit, "data-v2-itemnote": item.id, children: [
+    y("p", { className: "v2-catform__for", children: ["Note for this " + (item.kind === "project" ? "project" : "task") + ": ", d("b", { children: item.title })] }),
+    V2CATS.map(function (c) {
+      return y("div", { className: "v2-cat v2-cat--" + c, children: [
+        y("div", { className: "v2-cat__head", children: [d(Px[c], { className: "size-4", "aria-hidden": !0 }), " ", V2CAT[c]] }),
+        y("div", { className: "v2-cat__body", children: [
+          boxes[c].map(function (t, i) {
+            return y("div", { className: "v2-cat__row", children: [
+              d("textarea", { "aria-label": V2CAT[c] + " " + (i + 1), "data-v2-cat": c, value: t, onChange: function (e) { set(c, i, e.target.value); } }),
+              d("button", { type: "button", className: "v2-cat__x", "aria-label": "Remove", onClick: function () { remove(c, i); }, children: "\u2715" }),
+            ] }, i);
+          }),
+          d("button", { type: "button", className: "v2-cat__add", onClick: function () { add(c); }, children: "+ Add" }),
+        ] }),
+      ] }, c);
+    }),
+    y("div", { className: "v2-actions", children: [
+      d(ne, { type: "submit", size: "touch", children: "Save note" }),
+      onCancel && d("button", { type: "button", className: "v2-iconbtn", onClick: onCancel, children: "Cancel" }),
+      msg && d("span", { role: "status", className: "v2-muted", children: msg }),
+    ] }),
+  ] });
+}
+V2ItemNoteForm.__eapClient = !0;
+
 /* the highlighted Notes button at the top right of the employee header */
 function V2NotesButton({ employeeId: employeeId }) {
   var _a = (0, v.useState)(!1), open = _a[0], setOpen = _a[1];
   var close = (0, v.useCallback)(function () { setOpen(!1); }, []);
   var recent = open ? V2q("select ne.id, ne.text, ne.category, n.occurred_at, l.responsibility_id, r.title, r.kind from note_entries ne join notes n on n.id = ne.note_id left join v2_note_links l on l.note_entry_id = ne.id left join responsibilities r on r.id = l.responsibility_id where n.employee_id = ? and n.deleted_at is null and n.submitted_at is not null order by n.occurred_at desc, ne.id desc limit 5", [employeeId]) : [];
   return y(Fe, { children: [
-    y("button", { type: "button", className: "v2-notesbtn", "data-v2-notes": employeeId, onClick: function () { setOpen(!0); }, children: [d(Td, { className: "size-4", "aria-hidden": !0 }), " Notes"] }),
+    y("button", { type: "button", className: "v2-notesbtn", "data-v2-notes": employeeId, onClick: function () { setOpen(!0); }, children: [d(Td, { className: "size-4", "aria-hidden": !0 }), " Write Notes"] }),
     open && y(V2Modal, { title: "New note", sub: "General, or about one project or task", onClose: close, children: [
       d(V2NoteForm, { employeeId: employeeId }),
       d("p", { className: "v2-sub", children: "Recent notes" }),
@@ -165,7 +206,7 @@ function V2ItemDialog({ item: item0, employeeId: employeeId, onClose: onClose })
   return y(V2Modal, { title: item.title, sub: (item.kind === "project" ? "Project" : "Task") + (active ? " \xB7 active" : " \xB7 completed"), onClose: onClose, wide: !0, children: [
     mode === "note" ? y(Fe, { children: [
       d("p", { className: "v2-sub", style: { marginTop: 0 }, children: "Write a note about this " + (item.kind === "project" ? "project" : "task") }),
-      d(V2NoteForm, { employeeId: employeeId, presetId: item.id, onDone: function () { setMode("details"); done("Note saved."); }, onCancel: function () { setMode("details"); } }),
+      d(V2ItemNoteForm, { employeeId: employeeId, item: item, onDone: function (n) { setMode("details"); done(n + (n === 1 ? " note entry" : " note entries") + " saved for this " + (item.kind === "project" ? "project" : "task") + "."); }, onCancel: function () { setMode("details"); } }),
     ] }) : y(Fe, { children: [
       y("dl", { className: "v2-facts", children: [
         y("div", { className: "v2-fact", children: [d("dt", { children: "Start date" }), d("dd", { children: ge(item.started_on) })] }),
@@ -199,8 +240,13 @@ function V2ItemDialog({ item: item0, employeeId: employeeId, onClose: onClose })
         y("section", { children: [
           y("div", { className: "v2-row", children: [d("p", { className: "v2-sub", children: "Notes on this " + (item.kind === "project" ? "project" : "task") }),
             d(ne, { type: "button", size: "touch", variant: "outline", onClick: function () { setMode("note"); setMsg(""); }, "data-v2-writenote": item.id, children: "Write note" })] }),
-          notes.length ? d("ul", { className: "v2-notelist", children: notes.map(function (n) {
-            return y("li", { children: [d("p", { className: "v2-notelist__meta", children: ge(n.occurred_at) + " \xB7 " + (V2CAT[n.category] || n.category) }), d("p", { children: n.text })] }, n.id);
+          notes.length ? d("div", { className: "v2-catnotes", children: V2CATS.map(function (c) {
+            var list = notes.filter(function (n) { return n.category === c; });
+            if (!list.length) return null;
+            return y("div", { className: "v2-cat v2-cat--" + c, "data-v2-catlist": c, children: [
+              y("div", { className: "v2-cat__head", children: [d(Px[c], { className: "size-4", "aria-hidden": !0 }), " ", V2CAT[c]] }),
+              d("ul", { className: "v2-cat__list", children: list.map(function (n) { return y("li", { children: [d("span", { className: "v2-cat__date", children: ge(n.occurred_at) }), d("span", { children: n.text })] }, n.id); }) }),
+            ] }, c);
           }) }) : d("p", { className: "v2-empty", children: "No notes written about this item yet." }),
         ] }),
       ] }),
@@ -210,8 +256,8 @@ function V2ItemDialog({ item: item0, employeeId: employeeId, onClose: onClose })
 }
 V2ItemDialog.__eapClient = !0;
 function V2Item({ item: r, employeeId: employeeId, today: today }) {
-  var _a = (0, v.useState)(!1), open = _a[0], setOpen = _a[1];
-  var close = (0, v.useCallback)(function () { setOpen(!1); }, []);
+  var _a = (0, v.useState)(function () { try { return (ds.hash || "") === "#responsibility-" + r.id; } catch (e) { return !1; } }), open = _a[0], setOpen = _a[1];
+  var close = (0, v.useCallback)(function () { setOpen(!1); try { if (ds.hash === "#responsibility-" + r.id) ds.hash = ""; } catch (e) { /* router state */ } }, [r.id]);
   var late = r.effective_deadline < today;
   return y(Fe, { children: [
     y("button", { type: "button", className: "v2-item", id: "responsibility-" + r.id, "data-v2-item": r.id, onClick: function () { setOpen(!0); }, children: [
@@ -262,17 +308,6 @@ function V2Reports({ employee: e, mine: mine }) {
     ] }) });
 }
 
-/* ---------- dashboard: quick links in each senior manager's card ---------- */
-function V2QuickLinks({ id: id }) {
-  var links = [["Notes", "/employees/" + id + "/notes", Td], ["Report", "/employees/" + id + "/summary", zo], ["Development Plan", "/employees/" + id + "/plan", Zu]];
-  return y("div", { className: "v2-quick", "data-v2-quick": id, children: [
-    d("p", { className: "v2-quick__label", children: "Open" }),
-    d("div", { className: "v2-quick__links", children: links.map(function (l) {
-      return y(Ee, { prefetch: !1, href: l[1], className: "v2-quick__link", children: [d(l[2], { className: "size-4", "aria-hidden": !0 }), d("span", { children: l[0] }), d(la, { className: "size-3.5", "aria-hidden": !0 })] }, l[0]);
-    }) }),
-  ] });
-}
-
 /* ---------- the Overview ---------- */
 function V2Overview({ employeeId: id, actor: actor, mine: mine }) {
   var today = yt(new Date());
@@ -307,15 +342,13 @@ function V2Overview({ employeeId: id, actor: actor, mine: mine }) {
   /* 2. job description */
   var lines = String(jd ? jd.body : "").split("\n").map(function (l) { return l.trim(); }).filter(Boolean);
   var intro = lines.filter(function (l) { return l.indexOf("•") !== 0; }), bullets = lines.filter(function (l) { return l.indexOf("•") === 0; }).map(function (l) { return l.replace(/^•\s*/, ""); });
-  var jdCard = d(V2Box, { icon: zo, title: "Current job description", sub: "Maintained by the administrator", foot: jd ? "Current job description \xB7 updated " + Je(jd.updated_at) + (jd.updated_by ? " by " + jd.updated_by : "") : "Current job description", children: jd ? y("div", { className: "v2-jd", children: [
+  var jdCard = d(V2Box, { icon: zo, title: "Current job description", foot: jd ? "Current job description \xB7 updated " + Je(jd.updated_at) + (jd.updated_by ? " by " + jd.updated_by : "") : "Current job description", children: jd ? y("div", { className: "v2-jd", children: [
     intro.map(function (l, i) { return d("p", { className: "v2-jd__lead", children: l }, "p" + i); }),
     bullets.length > 0 && d("ul", { children: bullets.map(function (l, i) { return d("li", { children: l }, "b" + i); }) }),
   ] }) : d("p", { className: "v2-empty", children: "No job description yet. The administrator adds it on the employee's admin page." }) });
 
   /* 3. KPIs */
-  var ai = kpis.some(function (k) { return k.source === "ai_suggested"; });
-  var kpiCard = d(V2Box, { icon: kv, title: "KPIs for this job", sub: "Linked to the job description", action: ai && d("span", { className: "v2-badge", title: "The client may supply government KPIs; confirm the source before finalizing.", children: "AI-suggested \xB7 source to be confirmed" }),
-    foot: "KPIs for this job \xB7 Linked to the job description", children:
+  var kpiCard = d(V2Box, { icon: kv, title: "KPIs for this job", foot: "KPIs for this job", children:
     kpis.length ? d("ol", { className: "v2-kpis", children: kpis.map(function (k, i) { return y("li", { children: [d("span", { className: "v2-kpis__n", children: i + 1 }), d("span", { className: "v2-kpis__t", children: k.title }), d("b", { children: k.target })] }, k.id); }) })
       : d("p", { className: "v2-empty", children: "No KPIs yet." }) });
 

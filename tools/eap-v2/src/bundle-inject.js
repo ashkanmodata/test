@@ -100,7 +100,7 @@ function V2JobEditor({ employeeId: id, actorId: actorId, body: body0, kpis: kpis
     d("textarea", { id: "v2-jd-" + id, name: "jobDescription", value: body, onChange: function (e) { setBody(e.target.value); setMsg(""); } }),
     d("p", { className: "v2-muted", style: { margin: "4px 0 0" }, children: "One paragraph, then one duty per line starting with •" }),
     d("label", { children: "KPIs for this job" }),
-    d("p", { className: "v2-muted", style: { margin: 0 }, children: "Shown as “AI-suggested \xB7 source to be confirmed” until edited here. Replace them with the government KPIs once the client confirms the source." }),
+    d("p", { className: "v2-muted", style: { margin: 0 }, children: "Replace these with the government KPIs once the client confirms the source." }),
     kpis.map(function (k, i) {
       return y("div", { className: "v2-kpirow", children: [
         d("input", { "aria-label": "KPI " + (i + 1), name: "kpiTitle", value: k.title, placeholder: "KPI", onChange: function (e) { setKpi(i, "title", e.target.value); } }),

@@ -329,7 +329,6 @@ function V2arPageWork(A, emblem, page, pages) {
   if (items.length > maxRows) { P.txt("و" + (items.length - maxRows) + " مسؤوليات أخرى ضمن الفترة", x2 - 4, y + 8, 6.8, 500, K.muted); y += 14; }
   y += 10;
   P.txt("مؤشرات الأداء المرتبطة بالوصف الوظيفي", x2, y, 9, 700, K.ink);
-  if (A.kpis.some(function (k) { return k.source === "ai_suggested"; })) P.txt("مقترحة بالذكاء الاصطناعي · المصدر قيد التأكيد", x1, y, 6.8, 500, K.gold, "left");
   y += 14;
   A.kpis.slice(0, 5).forEach(function (k, i) {
     P.rr(x1, y - 7, x2 - x1, 16, 4, i % 2 ? "#fff" : K.card);
