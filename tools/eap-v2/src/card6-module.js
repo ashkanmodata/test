@@ -154,6 +154,19 @@ window.__cpcDemoModules.push(function (api) {
       Object.keys(SEN).forEach(function (id) { db.run("update employee_profile_ar set seniority_en = ?, seniority_ar = ? where employee_id = ?", [SEN[id][0], SEN[id][1], Number(id)]); });
       mark("schema-4");
     }
+    // round 7: how each seeded KPI is checked against the period's evidence (delivery figures or the manager's notes)
+    if (!done("schema-5")) {
+      var kc5 = db.exec("PRAGMA table_info(job_kpis)")[0].values.map(function (c) { return c[1]; });
+      if (kc5.indexOf("measure") < 0) db.run("ALTER TABLE job_kpis ADD COLUMN measure text");
+      var MEASURE = {
+        1: ["ontime_eff:95", "notes:communication_stakeholder", "completion:90", "notes:people_leadership_development"],
+        2: ["ontime_eff:90", "notes:communication_stakeholder", "notes:ownership_accountability", "none"],
+        3: ["ontime_eff:100", "notes:ownership_accountability", "completion:95", "ontime_orig:85"],
+        4: ["ontime_eff:95", "notes:ownership_accountability", "notes:decision_making_problem_solving", "notes:communication_stakeholder"],
+      };
+      Object.keys(MEASURE).forEach(function (id) { MEASURE[id].forEach(function (m, i) { db.run("update job_kpis set measure = ? where employee_id = ? and position = ? and source = 'ai_suggested'", [m, Number(id), i]); }); });
+      mark("schema-5");
+    }
     // The seeded history ends in September 2026, so a few delegations dated in the last month show the Overview's
     // "last 30 days" section working. They are added to the same table, so the full history stays complete.
     if (!done("recent-delegations-1") && heId) {

@@ -68,6 +68,12 @@ var V2T = {
     rankCmp: "مقارنة الترتيب", ownOrder: "ترتيب الموظف للزملاء:", plan: "التوصية وخطة التطوير",
     devPlan: function (c, d) { return "تطوير " + c + ": " + d; }, training: function (a, b) { return "التدريب: " + a + " برامج مكتملة و" + b + " قيد التنفيذ أو التخطيط خلال الفترة."; },
     pdfTitle: { form: "النموذج التعريفي للتقييم", detailed: "التقرير التفصيلي للتقييم" },
+    kpiHead: "مؤشرات الأداء: هل يحقق العمل المستهدف؟", kpiStatus: ["محقق", "محقق جزئياً", "غير محقق", "لا تتوفر أدلة"],
+    kpiEv: { ontime_eff: function (v, t) { return v + "% في الموعد المعتمد مقابل مستهدف " + t + "%"; }, ontime_orig: function (v, t) { return v + "% في الموعد الأصلي مقابل مستهدف " + t + "%"; },
+      completion: function (v, t) { return v + "% من المسؤوليات مكتملة مقابل مستهدف " + t + "%"; }, notes: function (s, d, c, t) { return s + " ملاحظات قوة و" + d + " ملاحظات تطوير في " + c + " · المستهدف: " + t; },
+      none: function (t) { return "غير مقاس في المنصة بعد · المستهدف: " + t; } },
+    kpiLine: function (m, p, x, n) { return "مؤشرات الأداء: " + m + " محقق، " + p + " جزئياً، " + x + " غير محقق من " + n + "."; },
+    kpiVerdict: function (m, p, x, n, gap) { return "مقابل مؤشرات الأداء، يحقق العمل " + m + " من " + n + " مؤشرات" + (p ? "، ويحقق " + p + " جزئياً" : "") + (x ? "، ولا يحقق " + x : "") + "." + (gap ? " أبرز فجوة: " + gap.title + " (" + gap.ev + ")." : " لا توجد فجوات جوهرية."); },
     opinionTitle: "رأي القائد المستند إلى ملاحظاته", ratingBasis: "مقترح بناءً على ملاحظات القائد وسجل الإنجاز",
     opinion: function (o) {
       var t = "تُظهر ملاحظات القائد خلال الفترة (" + o.notes + " ملاحظة) أن أبرز نقاط القوة " + (o.s1 ? "هي " + o.s1 + (o.s2 ? " و" + o.s2 : "") + "، إذ سُجّلت " + o.sn + " ملاحظات إيجابية في " + o.s1 + "." : "لم تتضح بعد.");
@@ -112,6 +118,12 @@ var V2T = {
     rankCmp: "Ranking comparison", ownOrder: "The employee's own order:", plan: "Recommendation and development plan",
     devPlan: function (c, d) { return "Develop " + c.toLowerCase() + ": " + d; }, training: function (a, b) { return "Training: " + a + " programmes completed and " + b + " in progress or planned in the period."; },
     pdfTitle: { form: "Assessment Profile Form", detailed: "Detailed Assessment Report" },
+    kpiHead: "KPIs: is the work meeting them?", kpiStatus: ["Met", "Partly met", "Not met", "No evidence"],
+    kpiEv: { ontime_eff: function (v, t) { return v + "% on the approved deadline vs target " + t + "%"; }, ontime_orig: function (v, t) { return v + "% on the original deadline vs target " + t + "%"; },
+      completion: function (v, t) { return v + "% of responsibilities completed vs target " + t + "%"; }, notes: function (s, d, c, t) { return s + " strength and " + d + " development notes on " + c.toLowerCase() + " · target: " + t; },
+      none: function (t) { return "Not measured in the platform yet · target: " + t; } },
+    kpiLine: function (m, p, x, n) { return "KPIs: " + m + " of " + n + " met, " + p + " partly met, " + x + " not met."; },
+    kpiVerdict: function (m, p, x, n, gap) { return "Against its KPIs, the work is meeting " + m + " of " + n + (p ? ", partly meeting " + p : "") + (x ? " and not meeting " + x : "") + "." + (gap ? " Main gap: " + gap.title + " (" + gap.ev + ")." : " No material gaps."); },
     opinionTitle: "Leader's opinion, formed from the manager's notes", ratingBasis: "Suggested from the manager's notes and the delivery record", words: "In the manager's words",
     opinion: function (o) {
       var t = o.insight ? o.insight : "The manager's notes (" + o.notes + " in the period) point to " + (o.s1 ? o.s1.toLowerCase() + (o.s2 ? " and " + o.s2.toLowerCase() : "") + " as the clearest strengths." : "no clear strength yet.") + (o.d1 ? " The main development priority is " + o.d1.toLowerCase() + ": " + o.dtext : "");
@@ -271,6 +283,27 @@ function V2arQuotes(A) {
   function best(cat) { var l = out.filter(function (e) { return e.category === cat; }).map(function (e) { return e.text.trim(); }).sort(function (a, b) { return a.length - b.length; }); return l.find(function (t) { return t.length > 40; }) || l[0]; }
   return [best("strength"), best("development")].filter(Boolean);
 }
+/* each KPI checked against the period's evidence: delivery figures or the manager's notes on the linked competency */
+function V2kpiEval(A) {
+  var T = A.T, F = A.F;
+  var rows = A.kpis.map(function (k) {
+    var title = A.en ? k.title : k.title_ar || k.title, target = A.en ? k.target : k.target_ar || k.target;
+    var m = String(k.measure || "none").split(":"), kind = m[0], arg = m[1], st = 3, ev;
+    function pct(v, t) { st = v == null ? 3 : v >= t ? 0 : v >= t - 15 ? 1 : 2; return T.kpiEv[kind](v == null ? "—" : v, t); }
+    if (kind === "ontime_eff") ev = pct(F.effPct, Number(arg));
+    else if (kind === "ontime_orig") ev = pct(F.completed ? Math.round(F.orig / F.completed * 100) : null, Number(arg));
+    else if (kind === "completion") ev = pct(F.scope ? Math.round(F.completed / F.scope * 100) : null, Number(arg));
+    else if (kind === "notes") {
+      var c = A.comps.find(function (x) { return x.key === arg; }) || { strengths: 0, development: 0 };
+      st = c.strengths + c.development === 0 ? 3 : c.strengths > c.development ? 0 : c.strengths === c.development ? 1 : 2;
+      ev = T.kpiEv.notes(c.strengths, c.development, T.comp[arg] || arg, target);
+    } else ev = T.kpiEv.none(target);
+    return { title: title, target: target, st: st, ev: ev };
+  });
+  var n = rows.length, met = rows.filter(function (r) { return r.st === 0; }).length, part = rows.filter(function (r) { return r.st === 1; }).length, miss = rows.filter(function (r) { return r.st === 2; }).length;
+  var gap = rows.filter(function (r) { return r.st === 2; })[0] || rows.filter(function (r) { return r.st === 1; })[0];
+  return { rows: rows, line: T.kpiLine(met, part, miss, n), verdict: T.kpiVerdict(met, part, miss, n, gap) };
+}
 /* the five-step scale: best on the reading-start side, the marker on the rating, the fill from the low end */
 function V2arScale(P, A, x1, y1, w, h, labelSize) {
   var K = P.K, T = A.T, si = A.si, labels = V2SCALE[A.en ? "en" : "ar"];
@@ -357,7 +390,7 @@ function V2arPageOne(A, emblem, page, pages) {
   V2arScale(P, A, 28, 270, 260, 120, 6.8);
   P.txt(T.ratingIs(A.ratingLabel), 280, 350, 11, 700, K.green);
   P.fit(T.ratingBasis, 280, 368, 244, 6.8, 500, K.muted);
-  var boxes = [[554.7, 806, T.boxes[0], "person", V2arPersonality(A, 2)], [291.3, 542.7, T.boxes[1], "work", T.work(F, A.kpis.length)], [28, 279.3, T.boxes[2], "leader", null]];
+  var boxes = [[554.7, 806, T.boxes[0], "person", V2arPersonality(A, 2)], [291.3, 542.7, T.boxes[1], "work", T.work(F, A.kpis.length).slice(0, 4).concat([V2kpiEval(A).line])], [28, 279.3, T.boxes[2], "leader", null]];
   boxes.forEach(function (b) {
     P.rect(b[0], 398, b[1], 420, K.bar);
     P.icon(b[3], b[1] - 16, 409, 12.5);
@@ -427,12 +460,17 @@ function V2arPageWork(A, emblem, page, pages) {
   });
   if (items.length > maxRows) { P.txt(T.more(items.length - maxRows), x2 - 4, y + 8, 6.8, 500, K.muted); y += 14; }
   y += 10;
-  P.txt(T.kpis, x2, y, 9, 700, K.ink); y += 14;
-  A.kpis.slice(0, 5).forEach(function (k, i) {
-    P.rr(x1, y - 7, x2 - x1, 16, 4, i % 2 ? "#fff" : K.card);
-    P.fit(A.en ? k.title : k.title_ar || k.title, x2 - 8, y + 1, 250, 7.6, 500, K.ink);
-    P.fit(A.en ? k.target : k.target_ar || k.target, x1 + 8, y + 1, 100, 7.6, 700, K.green, "left");
-    y += 18;
+  var KE = V2kpiEval(A), tone = [[K.green, "#e6eeeb"], [K.gold, K.cream], ["#9a4f37", "#f6e6e0"], [K.muted, "#EFEDE8"]];
+  P.txt(T.kpiHead, x2, y, 9, 700, K.ink); y += 13;
+  P.rr(x1, y - 6, x2 - x1, 2, 1, K.cream);
+  y = P.para(KE.verdict, x2 - 4, y + 6, x2 - x1 - 8, 7.6, 500, K.ink, 10.5, 3) + 4;
+  KE.rows.slice(0, 5).forEach(function (r, i) {
+    P.rr(x1, y - 7, x2 - x1, 24, 4, i % 2 ? "#fff" : K.card);
+    P.fit(r.title, x2 - 8, y + 1, 280, 7.6, 600, K.ink);
+    P.fit(r.ev, x2 - 8, y + 11, 290, 6.6, 500, K.muted);
+    P.rr(x1 + 6, y - 2, 64, 13, 6.5, tone[r.st][1]);
+    P.fit(T.kpiStatus[r.st], x1 + 38, y + 4.5, 58, 7, 700, tone[r.st][0], "center");
+    y += 27;
   });
   y += 6;
   P.txt(T.discLead, x2, y, 9, 700, K.ink); y += 14;
