@@ -51,7 +51,7 @@ def patch_bundle(js):
     # 3. employee tabs: one row, Overview · Notes · Report · Development Plan
     js = replace_once(js,
         'function pQ({basePath:e,active:t,mine:r}){let a=t==="responsibilities"||t==="notes",n=t==="summary"||t==="leadership"||t==="plan"||t==="ranking",o=[{key:"overview",label:"Overview",href:e,selected:t==="overview"},{key:"work",label:"Work",href:`${e}/responsibilities`,selected:a},{key:"assessment",label:"Assessment",href:`${e}/summary`,selected:n}],i=Kxe(e,r).filter(s=>a?["responsibilities","notes"].includes(s.key):n&&["summary","leadership","plan","ranking"].includes(s.key));',
-        'function pQ({basePath:e,active:t,mine:r}){let a=!1,n=!1,o=[{key:"overview",label:"Overview",href:e,selected:t==="overview"||t==="responsibilities"||t==="leadership"},{key:"notes",label:"Notes",href:`${e}/notes`,selected:t==="notes"},{key:"report",label:"Report",href:`${e}/summary`,selected:t==="summary"},{key:"plan",label:"Development Plan",href:`${e}/plan`,selected:t==="plan"}],i=[];',
+        'function pQ({basePath:e,active:t,mine:r}){let a=!1,n=!1,o=[{key:"overview",label:"Overview",href:e,selected:t==="overview"||t==="summary"||t==="responsibilities"||t==="leadership"},{key:"notes",label:"Notes",href:`${e}/notes`,selected:t==="notes"},{key:"plan",label:"Development Plan",href:`${e}/plan`,selected:t==="plan"}],i=[];',
         "employee tabs")
 
     # 4. profile header: no "View profile" link (the profile page is not in the navigation any more)
